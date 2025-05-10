@@ -121,6 +121,18 @@ class 雷电模拟器操作类:
 
         return result
 
+    def 重启模拟器(self):
+        with self._命令行锁:
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+            模拟器状态 = subprocess.run(
+                [self.雷电模拟器安装目录 + "ldconsole.exe", "action","--index",str(self.雷电模拟器索引),"--key","call.reboot","--value","nulll"],
+                encoding='gbk',
+                stdout=subprocess.PIPE,
+                startupinfo=startupinfo
+            )
+            return 模拟器状态.stdout
 
 
     def 取模拟器所有状态(self):
@@ -252,25 +264,4 @@ class 雷电模拟器操作类:
 if __name__ == '__main__':
     # 不同索引返回不同实例
     模拟器1 = 雷电模拟器操作类(0)
-    模拟器2 = 雷电模拟器操作类(1)
-
-    # 相同索引返回同一实例
-    模拟器3 = 雷电模拟器操作类(0)
-    assert 模拟器1 is 模拟器3
-
-
-    def 压力测试(索引):
-        模拟器 = 雷电模拟器操作类(索引)
-        for _ in range(100):
-            print(模拟器.取模拟器所有状态())
-
-
-    # 启动多线程测试
-    threads = []
-    for i in range(4):
-        t = threading.Thread(target=压力测试, args=(i % 2,))  # 两个模拟器交替操作
-        threads.append(t)
-        t.start()
-
-    for t in threads:
-        t.join()
+    模拟器1.重启模拟器()

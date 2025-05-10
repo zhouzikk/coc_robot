@@ -4,6 +4,7 @@ import time
 
 import cv2
 
+from 异常.自定义异常 import 图像获取失败
 from 数据库.任务数据库 import 任务数据库, 用户设置
 from 核心.op import op类
 from 模块.雷电模拟器操作类 import 雷电模拟器操作类
@@ -32,6 +33,7 @@ class 用户任务线程:
             daemon=True
         )
         self.主线程.start()
+        self.是否停止 = False
 
     def _任务流程(self):
         """主任务逻辑"""
@@ -41,17 +43,28 @@ class 用户任务线程:
         except Exception as e:
             #异常会导致停止执行脚本,不会进一步记录日志
             #然后会被监控中心检测到无心跳，导致重启
-            self.消息队列.put(f"用户{self.用户标识} 异常: {str(e)}")
+            self._往数据库写日志(f"用户{self.用户标识} 异常: {str(e)}",0)
+            #self.消息队列.put(f"用户{self.用户标识} 异常: {str(e)}")
 
     def _执行阶段(self):
         """任务处理逻辑"""
-        self.op = op类(self.雷电模拟器.取绑定窗口句柄的下级窗口句柄())
-        self._往数据库写日志("开始执行")
         print(123)
-        # 获取OpenCV格式图像
-        #cv图像 = self.op.获取屏幕图像cv(0, 0, 800, 600)
-        #cv2.imshow('屏幕截图', cv图像)
-        #cv2.waitKey(0)
+        print(self.雷电模拟器.取绑定窗口句柄的下级窗口句柄())
+        self.op = op类(self.雷电模拟器.取绑定窗口句柄的下级窗口句柄())
+
+        self._往数据库写日志("开始执行",20242)
+        print("开始执行",20242)
+        #获取OpenCV格式图像
+        try:
+            cv图像 = self.op.获取屏幕图像cv(0, 0, 800, 600)
+            cv2.imshow('屏幕截图', cv图像)
+            cv2.waitKey(0)
+
+        except 图像获取失败 as 异常实例:
+            print("处理异常")
+
+
+
 
 
     def _往数据库写日志(self,日志内容:str,超时的时间:float=10):

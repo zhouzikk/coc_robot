@@ -8,12 +8,15 @@ from PIL import Image
 import numpy as np
 import cv2
 
+from 异常.自定义异常 import 图像获取失败
+
 当前文件所在目录 = os.path.dirname(__file__)  # 当前文件所在目录
 print(当前文件所在目录)
 
 # 加载注册com组件的dll
-免注册dll = ctypes.windll.LoadLibrary(当前文件所在目录+R"op-0.4.5_with_model\tools.dll")
-是否注册成功 = 免注册dll.setupA(bytes(当前文件所在目录+R"\op-0.4.5_with_model\op_x64.dll", encoding="utf-8"))
+免注册dll = ctypes.windll.LoadLibrary(当前文件所在目录+R"\op-0.4.5_with_model\tools.dll")
+dll目录=当前文件所在目录+R"\op-0.4.5_with_model\op_x64.dll"
+是否注册成功 = 免注册dll.setupW(dll目录)
 
 print("op免注册状态：" + str(是否注册成功))
 
@@ -96,7 +99,7 @@ class op类:
                 time.sleep(重试间隔)
 
         # 超出最大重试次数
-        raise RuntimeError(f"连续{最大重试次数}次获取到黑屏图像")
+        raise 图像获取失败(f"连续{最大重试次数}次获取到黑屏图像")
 
     def __getattr__(self, 属性名):
         """转发其他属性访问到原始引擎"""
