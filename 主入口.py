@@ -3,70 +3,70 @@ import queue
 import time
 from time import sleep
 
-from 数据库.任务数据库 import 任务数据库, 用户设置
-from 线程.用户任务线程 import 用户任务线程
+from 数据库.任务数据库 import 任务数据库, 机器人设置
+from 线程.自动化机器人 import 自动化机器人
 
 
 # ==== 监控中心 ====
-class 任务监控中心:
+class 机器人监控中心:
     """增强型监控服务"""
 
     def __init__(self):
-        self.在线用户线程池 = {}
-        self.消息队列 = queue.Queue()#所有在线用户共用一个消息队列和数据库
+        self.机器人池 = {}
+        self.全局消息队列 = queue.Queue()#所有在线用户共用一个消息队列和数据库
         self.数据库 = 任务数据库()
         self.运行标志 = True
 
-        # 启动监控线程
+        # 启动监控线程,监控每一个机器人的行为
         self.监控线程 = threading.Thread(
             target=self._监控循环,
-            name="全局监控",
+            name="机器人监控线程",
             daemon=True
         )
         self.监控线程.start()
 
-    def 创建用户任务(self, 用户标识: str, 初始设置: 用户设置 = None):
-        """创建新任务"""
-        if 用户标识 in self.在线用户线程池:
-            raise ValueError("用户已存在")
-
-        新线程 = 用户任务线程(用户标识, self.消息队列, self.数据库)
+    def 创建并启动机器人(self, 机器人标志: str, 初始设置: 机器人设置 = None):
+        """创建机器人并启动"""
+        if 机器人标志 in self.机器人池:
+            raise ValueError(f"机器人标志[{机器人标志}],已存在")
+        else:
+            机器人实例 = 自动化机器人(机器人标志, self.全局消息队列, self.数据库)
 
         if 初始设置:
-            self.数据库.保存用户设置(用户标识,初始设置)
-        self.在线用户线程池[用户标识] = 新线程
-        新线程.启动工作线程()
+            self.数据库.保存机器人设置(机器人标志, 初始设置)
+
+        self.机器人池[机器人标志] = 机器人实例
+        机器人实例.启动()
 
     def _监控循环(self):
-
-        """监控主循环"""
+        """持续监控所有机器人的状态"""
         while self.运行标志:
             # 检查任务状态
-            for 用户标识, 线程 in list(self.在线用户线程池.items()):
+            for 用户标识, 线程 in list(self.机器人池.items()):
                 if  线程.检查超时():
-                    self.消息队列.put(f"用户{用户标识} 心跳超时，重启中...")
+                    self.全局消息队列.put(f"用户{用户标识} 心跳超时，重启中...")
                     线程.停止()
-                    线程.启动工作线程()
+                    线程.启动()
 
             # 处理消息
             self._处理消息()
             time.sleep(1)
 
     def _处理消息(self):
-        """处理各个线程发过来的消息"""
-        while not self.消息队列.empty():
-            消息 = self.消息队列.get()
-            print(f"[监控] {time.ctime()}: {消息}")
-            self.消息队列.task_done()
+        """处理来自各个创建的机器人的所有消息"""
+        while not self.全局消息队列.empty():
+            消息 = self.全局消息队列.get()
+            print(f"[机器人监控] {time.ctime()}: {消息}")
+            self.全局消息队列.task_done()
 
 
 
 # ==== 使用示例 ====
 if __name__ == "__main__":
     # 初始化系统
-    监控中心 = 任务监控中心()
+    机器人监控系统 = 机器人监控中心()
 
     # 创建默认配置用户
-    监控中心.创建用户任务("普通用户",用户设置(雷电模拟器索引=0))
-
+    机器人监控系统.创建并启动机器人("模拟器索引0", 机器人设置(雷电模拟器索引=0))
+    #监控中心.创建用户任务("模拟器索引1",用户设置(雷电模拟器索引=1))
     sleep(400000)

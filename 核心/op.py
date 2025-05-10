@@ -8,7 +8,7 @@ from PIL import Image
 import numpy as np
 import cv2
 
-from 异常.自定义异常 import 图像获取失败
+from 核心.核心异常们 import 图像获取失败
 
 当前文件所在目录 = os.path.dirname(__file__)  # 当前文件所在目录
 print(当前文件所在目录)
@@ -72,6 +72,7 @@ class op类:
                 if 尝试次数 < 最大重试次数:
                     time.sleep(重试间隔)
                     continue
+                self.解绑()
                 raise RuntimeError("连续获取屏幕数据失败")
 
             # 转换字节数据
@@ -92,13 +93,14 @@ class op类:
 
             except Exception as 转换异常:
                 if 尝试次数 == 最大重试次数:
+                    self.解绑()
                     raise RuntimeError(f"图像转换异常: {str(转换异常)}")
 
             # 达到最大尝试次数前进行延迟
             if 尝试次数 < 最大重试次数:
                 time.sleep(重试间隔)
-
         # 超出最大重试次数
+        self.解绑()
         raise 图像获取失败(f"连续{最大重试次数}次获取到黑屏图像")
 
     def __getattr__(self, 属性名):

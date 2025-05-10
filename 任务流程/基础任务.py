@@ -16,4 +16,4 @@ class 基础任务(ABC):
 
     def 异常处理(self, 上下文: '任务上下文', 异常: Exception):
         """默认异常处理"""
-        上下文.消息队列.put(f"任务[{self.__class__.__name__}] 异常: {str(异常)}")
+        上下文.全局消息队列.put(f"任务[{self.__class__.__name__}] 异常: {str(异常)}")
