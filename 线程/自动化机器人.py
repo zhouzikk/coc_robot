@@ -21,11 +21,14 @@ class 任务上下文:
     消息队列: queue.Queue
     暂停事件: threading.Event
     停止事件: threading.Event
-    日志记录器: callable
     op:op类
     雷电模拟器:雷电模拟器操作类
     键盘:键盘控制器
     鼠标:鼠标控制器
+
+    def 日志记录器(self,日志内容:str,超时的时间:float=10):
+        print(f"[机器人消息] {self.机器人标志} {time.ctime()}: {日志内容}")
+        self.数据库.记录日志(self.机器人标志, 日志内容, time.time() + 超时的时间)
 
     def 发送重启请求(self, 原因: str):
         """发送重启请求并终止当前线程"""
@@ -36,8 +39,24 @@ class 任务上下文:
             "机器人标志": self.机器人标志,
             "原因": 原因
         })
+
         # 设置停止事件以终止当前线程
         self.停止事件.set()
+
+    def 延时(self,毫秒数):
+        for _ in range(毫秒数):
+            time.sleep(0.001)
+
+
+            if self.暂停事件.is_set():
+                self.暂停事件.wait()
+
+            if self.停止事件.is_set():
+                self.日志记录器("收到停止事件")
+                self.op.解绑()
+                raise SystemExit(f"收到退出请求,主动退出线程,机器人{self.机器人标志}已关闭")
+
+
 
 
 from abc import ABC, abstractmethod
@@ -57,17 +76,7 @@ class 基础任务(ABC):
         """默认异常处理"""
         上下文.消息队列.put(f"任务[{self.__class__.__name__}] 异常: {str(异常)}")
 
-    def 延时(self,上下文: '任务上下文',毫秒数):
-        for _ in range(毫秒数):
-            time.sleep(0.001)
 
-            if 上下文.暂停事件.is_set():
-                上下文.暂停事件.wait()
-
-            if 上下文.停止事件.is_set():
-                上下文.op.解绑()
-                print(12345)
-                raise SystemExit(f"收到退出请求,主动退出线程,机器人{上下文.机器人标志}已关闭")
 
 
 
@@ -79,11 +88,10 @@ class 启动游戏(基础任务):
         上下文.日志记录器("开始启动游戏")
         cv图像=上下文.op.获取屏幕图像cv(0, 0, 800, 600)
 
-
+        上下文.延时(300)
         cv2.imshow('屏幕截图', cv图像)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
-
 
         return True
 
@@ -134,10 +142,10 @@ class 自动化机器人:
         self.请求继续()#唤醒可能已经暂停的线程
         self.停止事件.set()
 
-        if hasattr(self, 'op') and self.op:
-            self._往数据库写日志("触发终止,开始解绑释放资源,停止原因:"+停止原因)
-            self.op.解绑()
-            self.op = None  # 显式释放资源
+        # if hasattr(self, 'op') and self.op:
+        #     self._往数据库写日志("触发终止,开始解绑释放资源,停止原因:"+停止原因)
+        #     self.op.解绑()
+        #     self.op = None  # 显式释放资源
 
         #等待线程停止
         if self.主线程.is_alive():
@@ -153,7 +161,7 @@ class 自动化机器人:
         self.op = op类(self.雷电模拟器.取绑定窗口句柄的下级窗口句柄())
         if self.op is None:
             print("op创建失败")
-        self._往数据库写日志("开始执行")
+
 
         上下文=任务上下文(
             机器人标志=self.机器人标志,
@@ -161,12 +169,12 @@ class 自动化机器人:
             数据库= self.数据库,
             停止事件=self.停止事件,
             暂停事件=self.暂停事件,
-            日志记录器=self._往数据库写日志,
             op=self.op,
             雷电模拟器=self.雷电模拟器,
             鼠标=鼠标控制器(self.雷电模拟器.取绑定窗口句柄()),
             键盘=键盘控制器(self.雷电模拟器.取绑定窗口句柄())
         )
+        上下文.日志记录器("开始执行")
         try:
             尝试次数=0
             #检查图片是否可以正常获取
@@ -192,14 +200,14 @@ class 自动化机器人:
                         time.sleep(1)
                         # 上下文.键盘.按字符按压("f5")
                     else:
-                        上下文.日志记录器(f"重试 {尝试次数} 次后仍失败,再次抛出异常")
+                        #上下文.日志记录器(f"重试 {尝试次数} 次后仍失败,再次抛出异常")
                         上下文.op.解绑()
-                        raise 图像获取失败(f"重试 {尝试次数} 次后仍失败")
+                        raise 图像获取失败(f"重试获取图片 {尝试次数} 次后仍失败")
 
 
             上下文.日志记录器("模拟器图像获取正常")
-
-
+            #self.停止事件.set()
+            上下文.延时(100)
 
             启动游戏().执行(上下文)
 
@@ -210,13 +218,14 @@ class 自动化机器人:
         except Exception as e:
             #异常会导致停止执行脚本,不会进一步记录日志
             #然后会被监控中心检测到无心跳，导致重启
-            self._往数据库写日志(f"异常: {str(e)}",0)
+            上下文.发送重启请求(f"异常: {str(e)}")
+            #self._往数据库写日志(f"异常: {str(e)}",0)
             print("-"*10+"线程因为异常而消亡"+"-"*10)
+        except SystemExit as e:
+            print("-"*10+"线程因为捕获到退出而消亡"+"-"*10)
+            print("捕获到退出：", e)
 
 
-    def _往数据库写日志(self,日志内容:str,超时的时间:float=10):
-        print(f"[机器人消息] {self.机器人标志} {time.ctime()}: {日志内容}")
-        self.数据库.记录日志(self.机器人标志, 日志内容, time.time() + 超时的时间)
 
 
     def 检查超时(self) -> bool:
@@ -227,6 +236,7 @@ class 自动化机器人:
             return False  # 无日志视为第一次启动,不是超时的异常状态
 
         if self.停止事件.is_set():#如果线程已经停止了,那么不是超时的异常状态
+            print("线程已主动停止,不是异常状态")
             return False
 
 
