@@ -3,7 +3,7 @@ import win32con
 import win32gui
 import time
 
-class 键盘控制:
+class 键盘控制器:
     def __init__(self,窗口句柄=None , 模式='Windows消息模式',):
         self._窗口句柄 = None
         self._模式 = 0

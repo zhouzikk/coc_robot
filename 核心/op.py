@@ -59,7 +59,7 @@ class op类:
 
     def 获取屏幕图像cv(self, 左边=0, 顶边=0, 右边=2000, 底边=2000):
         """返回OpenCV格式的numpy数组图像（自动重试黑屏检测）"""
-        最大重试次数 = 50
+        最大重试次数 = 3
         黑屏阈值 = 5  # 可调整的亮度阈值（0-255）
         重试间隔 = 0.05  # 单位：秒
 
@@ -72,7 +72,7 @@ class op类:
                 if 尝试次数 < 最大重试次数:
                     time.sleep(重试间隔)
                     continue
-                self.解绑()
+
                 raise RuntimeError("连续获取屏幕数据失败")
 
             # 转换字节数据
@@ -93,14 +93,14 @@ class op类:
 
             except Exception as 转换异常:
                 if 尝试次数 == 最大重试次数:
-                    self.解绑()
+
                     raise RuntimeError(f"图像转换异常: {str(转换异常)}")
 
             # 达到最大尝试次数前进行延迟
             if 尝试次数 < 最大重试次数:
                 time.sleep(重试间隔)
         # 超出最大重试次数
-        self.解绑()
+
         raise 图像获取失败(f"连续{最大重试次数}次获取到黑屏图像")
 
     def __getattr__(self, 属性名):
