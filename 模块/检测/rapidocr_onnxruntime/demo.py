@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 # @Author: SWHL
 # @Contact: liekkaskono@163.com
-from main import RapidOCR
+from 暂未使用.main import RapidOCR
 
 engine = RapidOCR()
 
