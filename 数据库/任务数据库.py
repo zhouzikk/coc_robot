@@ -4,7 +4,7 @@ import os
 import sqlite3
 import time
 from dataclasses import dataclass
-from typing import List
+from typing import List, Dict, Any, Optional
 
 @dataclass
 class 任务日志:
@@ -17,8 +17,20 @@ class 任务日志:
 class 机器人设置:
     雷电模拟器索引:int=1
     服务器:str="国际服"
-    部落冲突包名:str=("com.supercell.clashofclans" if 服务器 == "国际服" else "com.tencent.tmgp.supercell.clashofclans")
+    部落冲突包名: str = None
 
+    def __post_init__(self):
+        self.部落冲突包名 = ("com.supercell.clashofclans"
+                        if self.服务器 == "国际服" else
+                        "com.tencent.tmgp.supercell.clashofclans")
+
+
+
+@dataclass
+class 运行时状态:
+    机器人标志: str
+    记录时间: float
+    状态数据: Dict[str, Any]  # 使用中文键存储状态
 
 
 class 任务数据库:
@@ -41,6 +53,17 @@ class 任务数据库:
     def _初始化表结构(self):
         """初始化所有数据库表"""
         with self._获取连接() as conn:
+            # 状态记录表（支持任意状态类型）
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS 运行时状态 (
+                    记录ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                    机器人标志 TEXT NOT NULL,
+                    记录时间 REAL NOT NULL,
+                    状态类型 TEXT NOT NULL,  -- 如：resources/builder/upgrade_queue
+                    状态值 TEXT NOT NULL    -- JSON格式存储
+                )""")
+
+
             # 任务日志表
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS 任务日志 (
@@ -117,26 +140,147 @@ class 任务数据库:
             ).fetchone()
         return 机器人设置(**json.loads(结果[0])) if 结果 else 机器人设置()
 
+
+    # ==== 状态操作 ====
+    def 更新状态(self, 机器人标志: str, 状态类型: str, 状态数据: Any):
+        """原子化状态更新（保留历史记录）"""
+        with self._获取连接() as conn:
+            conn.execute(
+                """INSERT INTO 运行时状态 
+                (机器人标志, 记录时间, 状态类型, 状态值)
+                VALUES (?, ?, ?, ?)""",
+                (机器人标志, time.time(), 状态类型, json.dumps(状态数据))
+            )
+            conn.commit()
+
+    def 获取所有状态类型(self, 机器人标志: str = None) -> List[str]:
+        """从数据库动态获取所有出现过的状态类型"""
+        with self._获取连接() as conn:
+            if 机器人标志:
+                # 获取指定机器人的状态类型
+                结果 = conn.execute("""
+                    SELECT DISTINCT 状态类型 
+                    FROM 运行时状态 
+                    WHERE 机器人标志 = ?
+                    ORDER BY 状态类型
+                """, (机器人标志,)).fetchall()
+            else:
+                # 获取所有状态类型
+                结果 = conn.execute("""
+                    SELECT DISTINCT 状态类型 
+                    FROM 运行时状态 
+                    ORDER BY 状态类型
+                """).fetchall()
+
+        return [行[0] for 行 in 结果] if 结果 else []
+
+    def 获取最新完整状态(self, 机器人标志: str) -> 运行时状态:
+        """合并所有类型的最新状态"""
+        完整状态 = {}
+        # 动态获取该机器人有记录的状态类型
+        状态类型列表 = self.获取所有状态类型(机器人标志)
+        # 状态类型列表 = ['资源', '建筑工人', '升级队列', '部落战']  # 可扩展中文类型
+
+        with self._获取连接() as conn:
+            for 类型 in 状态类型列表:
+                结果 = conn.execute("""
+                    SELECT 状态值 
+                    FROM 运行时状态 
+                    WHERE 机器人标志 = ? AND 状态类型 = ?
+                    ORDER BY 记录ID DESC 
+                    LIMIT 1
+                """, (机器人标志, 类型)).fetchone()
+
+                if 结果:
+                    完整状态[类型] = json.loads(结果[0])
+
+        return 运行时状态(
+            机器人标志=机器人标志,
+            记录时间=time.time(),
+            状态数据=完整状态
+        )
+
+
+    def 获取状态历史(self, 机器人标志: str,
+                     状态类型: Optional[str] = None,
+                     起始时间: float = 0,
+                     截止时间: float = None,
+                     最大条数: int = 500) -> List[Dict]:
+        """通用历史查询"""
+        截止时间 = 截止时间 or time.time()
+        查询参数 = [机器人标志, 起始时间, 截止时间, 最大条数]
+        类型条件 = ""
+
+        if 状态类型:
+            类型条件 = "AND 状态类型 = ?"
+            查询参数.insert(3, 状态类型)
+
+        with self._获取连接() as conn:
+            records = conn.execute(f"""
+                SELECT 记录时间, 状态类型, 状态值 
+                FROM 运行时状态
+                WHERE 机器人标志 = ? 
+                  AND 记录时间 BETWEEN ? AND ?
+                  {类型条件}
+                ORDER BY 记录时间 DESC
+                LIMIT ?
+            """, 查询参数).fetchall()
+
+        return [{
+            "时间": row[0],
+            "类型": row[1],
+            "数据": json.loads(row[2])
+        } for row in records]
+
+
 if __name__ == "__main__":
     数据库 = 任务数据库()
 
-    # 保存一个机器人设置
-    设置 = 机器人设置(雷电模拟器索引=2, 服务器="国内服")
+    # 1. 保存和读取机器人设置
+    设置 = 机器人设置(雷电模拟器索引=2, 服务器="国服")
     数据库.保存机器人设置("机器人001", 设置)
 
-    # 读取该机器人设置
-    获取设置 = 数据库.获取机器人设置("机器人001")
-    print("获取的设置：", 获取设置)
+    获取的设置 = 数据库.获取机器人设置("机器人001")
+    print("获取的设置：", 获取的设置)
 
-    # 添加一条日志
-    数据库.记录日志("机器人0012", "任务启动成功", time.time() + 60)
+    # 2. 记录和查询日志
+    数据库.记录日志("机器人001", "任务启动成功", time.time() + 60)
 
-    # 获取最后日志
-    最后日志 = 数据库.读取最后日志("机器人001")
-    print("最后一条日志：", 最后日志)
+    最后一条日志 = 数据库.读取最后日志("机器人001")
+    print("最后一条日志：", 最后一条日志)
 
-    # 查询历史日志
     日志列表 = 数据库.查询日志历史("机器人001", 最大条数=5)
+    print("历史日志：")
     for 日志 in 日志列表:
-        print("历史日志：", 日志)
-    print(数据库.获取机器人设置("机器人0012"))
+        print(f"[{time.ctime(日志.记录时间)}] {日志.日志内容}")
+
+    # 查询一个没有设置记录的机器人
+    默认设置 = 数据库.获取机器人设置("机器人002")
+    print("默认设置：", 默认设置)
+
+    # 3. 更新和读取状态信息
+    数据库.更新状态("机器人001", "资源", {
+        "金币": 1500000,
+        "圣水": 800000,
+        "暗黑重油": 2000
+    })
+
+    数据库.更新状态("机器人001", "建筑工人", {
+        "空闲工人": 2,
+        "工人总数": 5
+    })
+
+    数据库.更新状态("机器人001", "升级队列", {
+        "当前升级": "箭塔",
+        "剩余时间": 3600
+    })
+
+    当前状态 = 数据库.获取最新完整状态("机器人001")
+    print("当前完整状态：")
+    for 类型, 数据 in 当前状态.状态数据.items():
+        print(f"- {类型}：{数据}")
+
+    # 查询资源状态的历史记录
+    print("资源状态历史：")
+    for 记录 in 数据库.获取状态历史("机器人001", "资源"):
+        print(f"[{time.ctime(记录['时间'])}] {记录['数据']}")

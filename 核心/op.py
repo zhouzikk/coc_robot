@@ -41,7 +41,7 @@ class COM对象管理器:
 
 
 class op类:
-    def __init__(self, 窗口句柄, 图像获取模式='opengl'):
+    def __init__(self, 窗口句柄=None, 图像获取模式='opengl'):
         COM对象管理器.初始化COM()
         self.op_COM对象 = win32com.client.Dispatch("op.opsoft")
 
@@ -53,7 +53,7 @@ class op类:
             self.绑定(窗口句柄, 图像获取模式)
 
 
-    def 绑定(self, 窗口句柄, 图像获取模式, 鼠标模式="normal", 键盘模式="normal", 模式=0):
+    def 绑定(self, 窗口句柄, 图像获取模式='opengl', 鼠标模式="normal", 键盘模式="normal", 模式=0):
         绑定结果 = self.op_COM对象.BindWindow(窗口句柄, 图像获取模式, 鼠标模式, 键盘模式, 模式)
 
         if 绑定结果 != 1:
