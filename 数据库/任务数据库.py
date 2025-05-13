@@ -18,6 +18,7 @@ class 机器人设置:
     雷电模拟器索引:int=1
     服务器:str="国际服"
     部落冲突包名: str = None
+    欲进攻的最小资源:int=700000
 
     def __post_init__(self):
         self.部落冲突包名 = ("com.supercell.clashofclans"

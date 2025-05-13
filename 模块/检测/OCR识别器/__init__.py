@@ -38,7 +38,7 @@ class 安全OCR引擎:
     def __call__(self, *输入参数, **动态参数):
         """代理所有方法调用并自动加锁"""
         with self._操作锁:
-            print("线程安全调用中...")
+
             return self._原始引擎(*输入参数, **动态参数)
 
     def __getattr__(self, 属性名):

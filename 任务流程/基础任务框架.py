@@ -25,7 +25,7 @@ class 任务上下文:
     键盘:键盘控制器
     鼠标:鼠标控制器
 
-    def 置脚本状态(self, 日志内容:str, 超时的时间:float=10):
+    def 置脚本状态(self, 日志内容:str, 超时的时间:float=60):
         print(f"[机器人消息] {self.机器人标志} {time.ctime()}: {日志内容}")
         self.数据库.记录日志(self.机器人标志, 日志内容, time.time() + 超时的时间)
 

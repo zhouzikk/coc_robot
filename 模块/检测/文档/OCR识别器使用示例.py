@@ -1,3 +1,5 @@
+import time
+
 from 模块.检测.OCR识别器.rapidocr_onnxruntime import RapidOCR
 import cv2
 import numpy as np
@@ -50,10 +52,11 @@ img_path = r"OCR_Test.png"
 # 方式1：直接传入图片路径
 result, elapse = engine(img_path)
 
-
+耗时开始时间 = time.time()
 # 方式2：传入OpenCV图像
 img = cv2.imread(img_path)
 result, elapse = engine(img)
 print("识别结果:", result)
+print(耗时开始时间 -time.time())
 # 可视化结果
 draw_ocr_results(img_path, result)

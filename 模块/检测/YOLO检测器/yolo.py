@@ -2,6 +2,7 @@ import threading
 import time
 from pathlib import Path
 
+import cv2
 import numpy as np
 from io import BytesIO
 import onnxruntime
@@ -361,7 +362,11 @@ class 线程安全YOLO检测器(ONNX推理模型):
             return 新图像
 
         if isinstance(输入源, np.ndarray):
+            # 如果是 OpenCV 图像（BGR），先转换为 RGB
+            if 输入源.shape[-1] == 3:  # 彩色图像
+                输入源 = cv2.cvtColor(输入源, cv2.COLOR_BGR2RGB)
             图像对象 = Image.fromarray(输入源)
+
         elif isinstance(输入源, bytes):
             图像对象 = Image.open(BytesIO(输入源))
         else:
