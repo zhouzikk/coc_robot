@@ -67,6 +67,7 @@ has_box, result_image = detect_white_box(image_path)
 
 if has_box:
     print("检测到白色框")
+    print(has_box)
     cv2.imshow("Result", result_image)
     cv2.waitKey(0)
 else:

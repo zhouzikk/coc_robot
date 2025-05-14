@@ -18,7 +18,7 @@ class 任务上下文:
     机器人标志: str
     数据库: 任务数据库
     消息队列: queue.Queue
-    暂停事件: threading.Event
+    继续事件: threading.Event
     停止事件: threading.Event
     op:op类
     雷电模拟器:雷电模拟器操作类
@@ -26,7 +26,7 @@ class 任务上下文:
     鼠标:鼠标控制器
 
     def 置脚本状态(self, 日志内容:str, 超时的时间:float=60):
-        print(f"[机器人消息] {self.机器人标志} {time.ctime()}: {日志内容}")
+        print(f"[机器人消息] {self.机器人标志} {time.strftime('%Y年%m月%d日 %H:%M:%S')}: {日志内容}")
         self.数据库.记录日志(self.机器人标志, 日志内容, time.time() + 超时的时间)
 
     def 发送重启请求(self, 原因: str):
@@ -47,8 +47,8 @@ class 任务上下文:
             time.sleep(0.001)
 
 
-            if self.暂停事件.is_set():
-                self.暂停事件.wait()
+            if not self.继续事件.is_set():
+                self.继续事件.wait()
 
             if self.停止事件.is_set():
                 self.置脚本状态("收到停止事件")

@@ -1,6 +1,12 @@
 import time
+from concurrent.futures import ThreadPoolExecutor
+
+import cv2
+import numpy as np
+
 from 任务流程.基础任务框架 import 任务上下文, 基础任务
 from 任务流程.进攻坐标逻辑计算 import 坐标, 判断目标点到可进攻边缘距离是否小于设定值
+from 工具包.工具函数 import 打印运行耗时
 from 模块.检测.OCR识别器 import 安全OCR引擎
 from 模块.检测.YOLO检测器 import 线程安全YOLO检测器
 from 模块.检测.模板匹配器 import 模板匹配引擎
@@ -146,29 +152,85 @@ class 搜索目标敌人任务(基础任务):
         # 超时处理
         上下文.置脚本状态("等待下一个按钮超时,已经卡白云30秒了", 超时的时间=10)
         return False
-
+    #
+    # @打印运行耗时
+    # def 识别当前资源(self, 上下文, ocr_引擎) -> dict:
+    #     """优化后的资源识别方法"""
+    #     try:
+    #         全屏图像 = 上下文.op.获取屏幕图像cv(0, 0, 800, 600)
+    #
+    #         # 各资源区域坐标 (y1:y2, x1:x2)
+    #         金币区域 = 全屏图像[67:87, 43:243]
+    #         圣水区域 = 全屏图像[93:114, 44:250]
+    #         黑油区域 = 全屏图像[115:147, 40:148]
+    #
+    #         # 并行OCR识别
+    #         with ThreadPoolExecutor(max_workers=3) as pool:
+    #             金币任务 = pool.submit(self.安全OCR识别, ocr_引擎, 金币区域)
+    #             圣水任务 = pool.submit(self.安全OCR识别, ocr_引擎, 圣水区域)
+    #             黑油任务 = pool.submit(self.安全OCR识别, ocr_引擎, 黑油区域)
+    #
+    #             金币文本 = 金币任务.result()
+    #             圣水文本 = 圣水任务.result()
+    #             黑油文本 = 黑油任务.result()
+    #
+    #         return {
+    #             "金币": self.文本转数值(金币文本),
+    #             "圣水": self.文本转数值(圣水文本),
+    #             "黑油": self.文本转数值(黑油文本),
+    #             "总资源": self.文本转数值(金币文本) + self.文本转数值(圣水文本)
+    #         }
+    #     except:
+    #         return {"金币": 0, "圣水": 0, "黑油": 0, "总资源": 0}
+    #
+    # def 安全OCR识别(self, ocr_引擎, 图像区域) -> str:
+    #     """带预处理的OCR识别"""
+    #     try:
+    #         # 图像预处理
+    #         灰度图 = cv2.cvtColor(图像区域, cv2.COLOR_BGR2GRAY)
+    #         _, 二值图 = cv2.threshold(灰度图, 180, 255, cv2.THRESH_BINARY_INV)
+    #
+    #         # OCR识别
+    #         result, _ = ocr_引擎(二值图)
+    #         return str(result[0][1]) if result else "0"
+    #     except:
+    #         return "0"
+    @打印运行耗时
     def 识别当前资源(self, 上下文) -> dict:
         """修复后的资源识别方法"""
         try:
 
-            # 单次截取全屏图像（包含所有需要识别的区域）
-            全屏图像 = 上下文.op.获取屏幕图像cv(0, 0, 800, 600)  # 根据实际屏幕大小调整
+            # # 单次截取全屏图像（包含所有需要识别的区域）
+            # 全屏图像 = 上下文.op.获取屏幕图像cv(0, 0, 800, 600)  # 根据实际屏幕大小调整
+            #
+            # # 从全屏图像中提取各资源区域
+            # 金币区域 = 全屏图像[67:87, 43:243]  # y1:y2, x1:x2
+            # 圣水区域 = 全屏图像[93:114, 44:250]  # 注意OpenCV的矩阵切片顺序
+            # 黑油区域 = 全屏图像[115:147, 40:148]
+            #
+            # # OCR识别（添加空值保护）
+            # 耗时开始时间 = time.time()
+            # 金币结果, _ = self.ocr引擎(金币区域) if self.ocr引擎 else (None, 0)
+            # 圣水结果, _ = self.ocr引擎(圣水区域) if self.ocr引擎 else (None, 0)
+            # 黑油结果, _ = self.ocr引擎(黑油区域) if self.ocr引擎 else (None, 0)
+            #
+            # # 安全提取文本（示例OCR结果结构：[[[[坐标], 文本, 置信度], ...]]）
+            # 金币文本 = str(金币结果[0][1]) if 金币结果 and len(金币结果) > 0 else "0"
+            # 圣水文本 = str(圣水结果[0][1]) if 圣水结果 and len(圣水结果) > 0 else "0"
+            # 黑油文本 = str(黑油结果[0][1]) if 黑油结果 and len(黑油结果) > 0 else "0"
+            #
 
-            # 从全屏图像中提取各资源区域
-            金币区域 = 全屏图像[67:87, 43:243]  # y1:y2, x1:x2
-            圣水区域 = 全屏图像[93:114, 44:250]  # 注意OpenCV的矩阵切片顺序
-            黑油区域 = 全屏图像[115:147, 40:148]
+            全屏图像 = 上下文.op.获取屏幕图像cv(14,67,151,146)
 
-            # OCR识别（添加空值保护）
-            耗时开始时间 = time.time()
-            金币结果, _ = self.ocr引擎(金币区域) if self.ocr引擎 else (None, 0)
-            圣水结果, _ = self.ocr引擎(圣水区域) if self.ocr引擎 else (None, 0)
-            黑油结果, _ = self.ocr引擎(黑油区域) if self.ocr引擎 else (None, 0)
 
-            # 安全提取文本（示例OCR结果结构：[[[[坐标], 文本, 置信度], ...]]）
-            金币文本 = str(金币结果[0][1]) if 金币结果 and len(金币结果) > 0 else "0"
-            圣水文本 = str(圣水结果[0][1]) if 圣水结果 and len(圣水结果) > 0 else "0"
-            黑油文本 = str(黑油结果[0][1]) if 黑油结果 and len(黑油结果) > 0 else "0"
+            # 单次OCR识别（结果按顺序对应各区域）
+            result, _ = self.ocr引擎(全屏图像)
+            # 解析结果（假设OCR按行返回）
+            金币文本 = str(result[0][1]) if len(result) > 0 else "0"
+            圣水文本 = str(result[1][1]) if len(result) > 1 else "0"
+            黑油文本 = str(result[2][1]) if len(result) > 2 else "0"
+
+
 
             return {
                 "金币": self.文本转数值(金币文本),

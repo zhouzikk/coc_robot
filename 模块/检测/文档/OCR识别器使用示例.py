@@ -47,7 +47,7 @@ engine2=安全OCR引擎()
 # 判断是不是单例模式
 print(engine2,engine)
 
-img_path = r"OCR_Test.png"
+img_path = r"img.png"
 
 # 方式1：直接传入图片路径
 result, elapse = engine(img_path)
@@ -55,6 +55,7 @@ result, elapse = engine(img_path)
 耗时开始时间 = time.time()
 # 方式2：传入OpenCV图像
 img = cv2.imread(img_path)
+
 result, elapse = engine(img)
 print("识别结果:", result)
 print(耗时开始时间 -time.time())
