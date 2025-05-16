@@ -19,6 +19,7 @@ class 机器人设置:
     服务器:str="国际服"
     部落冲突包名: str = None
     欲进攻的最小资源:int=700000
+    开启刷墙=True
 
     def __post_init__(self):
         self.部落冲突包名 = ("com.supercell.clashofclans"
@@ -141,6 +142,20 @@ class 任务数据库:
             ).fetchone()
         return 机器人设置(**json.loads(结果[0])) if 结果 else 机器人设置()
 
+    def 查询所有机器人设置(self) -> Dict[str, 机器人设置]:
+        """获取数据库中所有机器人的设置"""
+        所有设置 = {}
+        with self._获取连接() as conn:
+            结果列表 = conn.execute("SELECT 机器人标志, 设置JSON FROM 机器人设置").fetchall()
+            for 机器人标志, 设置JSON in 结果列表:
+                所有设置[机器人标志] = 机器人设置(**json.loads(设置JSON))
+        return 所有设置
+
+    def 删除机器人设置(self, 机器人标志: str):
+        """删除指定机器人的设置"""
+        with self._获取连接() as conn:
+            conn.execute("DELETE FROM 机器人设置 WHERE 机器人标志 = ?", (机器人标志,))
+            conn.commit()
 
     # ==== 状态操作 ====
     def 更新状态(self, 机器人标志: str, 状态类型: str, 状态数据: Any):
@@ -285,3 +300,8 @@ if __name__ == "__main__":
     print("资源状态历史：")
     for 记录 in 数据库.获取状态历史("机器人001", "资源"):
         print(f"[{time.ctime(记录['时间'])}] {记录['数据']}")
+
+    全部设置 = 数据库.查询所有机器人设置()
+    print("全部机器人设置：")
+    for 标志, 设置 in 全部设置.items():
+        print(f"{标志} -> {设置}")

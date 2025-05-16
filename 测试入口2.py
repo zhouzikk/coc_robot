@@ -253,12 +253,12 @@ class 增强型机器人控制界面:
         # 配置操作按钮
         按钮框架 = ttk.Frame(配置框架)
         按钮框架.pack(pady=10)
-        ttk.Button(按钮框架, text="新建机器人", command=self.新建配置).pack(side=tk.LEFT, padx=5)
-        ttk.Button(按钮框架, text="应用更改", command=self.保存配置).pack(side=tk.LEFT, padx=5)
-        ttk.Button(按钮框架, text="撤销更改", command=self.重置配置).pack(side=tk.LEFT, padx=5)
+        ttk.Button(按钮框架, text="新建机器人", command=self.新建机器人).pack(side=tk.LEFT, padx=5)
+        ttk.Button(按钮框架, text="应用更改", command=self.应用更改).pack(side=tk.LEFT, padx=5)
+        ttk.Button(按钮框架, text="撤销更改", command=self.撤销更改).pack(side=tk.LEFT, padx=5)
         右侧容器.add(配置框架, text="配置管理")
 
-    def 新建配置(self):
+    def 新建机器人(self):
         """清空表单准备新建"""
         self.当前机器人ID = None
         for 标签, 控件 in self.配置输入项.items():
@@ -274,7 +274,7 @@ class 增强型机器人控制界面:
                 控件.delete(0, tk.END)
                 控件.insert(0, "200000")
 
-    def 保存配置(self):
+    def 应用更改(self):
         配置数据 = {k: v.get() for k, v in self.配置输入项.items()}
         if not 配置数据["机器人标识"].strip():
             messagebox.showerror("错误", "机器人标识不能为空！")
@@ -335,7 +335,7 @@ class 增强型机器人控制界面:
         except Exception as e:
             messagebox.showerror("更新失败", str(e))
 
-    def 重置配置(self):
+    def 撤销更改(self):
         """恢复当前选择的配置"""
         if self.当前机器人ID:
             self.载入选中配置()

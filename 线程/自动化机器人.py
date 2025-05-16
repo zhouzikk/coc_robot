@@ -4,6 +4,7 @@ import threading
 import time
 import random
 
+from 任务流程.升级城墙 import 城墙升级任务
 from 任务流程.启动模拟器 import 启动模拟器任务
 from 任务流程.基础任务框架 import 任务上下文
 from 任务流程.打开进攻页面 import 打开进攻页面任务
@@ -12,7 +13,7 @@ from 任务流程.检查图像 import 检查图像任务
 from 任务流程.检测游戏登录状态 import 检测游戏登录状态任务
 from 任务流程.等待战斗结束并回营 import 等待战斗结束并回营任务
 from 任务流程.进攻 import 进攻任务
-from 数据库.任务数据库 import 任务数据库
+from 数据库.任务数据库 import 任务数据库, 机器人设置
 from 核心.op import op类
 
 from 核心.键盘操作 import 键盘控制器
@@ -67,13 +68,28 @@ class 自动化机器人:
         """标记终止状态"""
         self.继续()#唤醒可能已经暂停的线程
         self.停止事件.set()
-        #等待线程停止
-        if self.主线程.is_alive():
+        #等待线程停止,如果未启动则没有主线程属性,加一层判断
+        if hasattr(self, "主线程") and self.主线程.is_alive():
             self.主线程.join()
+
+        # if self.主线程.is_alive():
+        #     self.主线程.join()
 
         #print("成功终止")
 
+    @property
+    def 设置(self) -> 机器人设置:
+        配置 = self.数据库.获取机器人设置(self.机器人标志)
+        return 配置
 
+    @property
+    def 当前状态(self) -> str:
+        if self.停止事件.is_set():
+            return "已停止"
+        elif not self.继续事件.is_set():
+            return "暂停中"
+        else:
+            return "运行中"
 
     def _任务流程(self):
         """主任务逻辑"""
@@ -95,7 +111,7 @@ class 自动化机器人:
         上下文.置脚本状态("开始执行",1000)
         上下文.继续事件.set()
         try:
-            # 启动模拟器任务().执行(上下文)
+            启动模拟器任务().执行(上下文)
             上下文.op.绑定(self.雷电模拟器.取绑定窗口句柄的下级窗口句柄())
             # 上下文.脚本延时(500)
             检查图像任务().执行(上下文)
@@ -108,7 +124,7 @@ class 自动化机器人:
                 进攻任务().执行(上下文)
                 等待战斗结束并回营任务().执行(上下文)
                 上下文.置脚本状态("进攻完毕,到循环头")
-
+                #城墙升级任务().执行(上下文)
 
             print("-"*10+F"{self.机器人标志} 线程自然消亡"+"-"*10)
             self.停止事件.set()#标志目前线程已经停止了,以免监控中心一直启动
