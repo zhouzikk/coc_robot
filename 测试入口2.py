@@ -339,25 +339,6 @@ class 增强型机器人控制界面:
         """恢复当前选择的配置"""
         if self.当前机器人ID:
             self.载入选中配置()
-    #
-    # def 删除选中机器人(self):
-    #     if not self.当前机器人ID:
-    #         return
-    #
-    #     if messagebox.askyesno("确认删除", f"确定要永久删除 {self.当前机器人ID} 的配置吗？"):
-    #         try:
-    #
-    #             # 停止并移除机器人
-    #             if robot := self.监控中心.机器人池.get(self.当前机器人ID):
-    #                 robot.停止()
-    #                 del self.监控中心.机器人池[self.当前机器人ID]
-    #             # 删除数据库记录
-    #             self.数据库.删除机器人设置(self.当前机器人ID)
-    #             self.当前机器人ID = None
-    #             self.更新机器人列表()
-    #             self.记录操作日志("已删除配置")
-    #         except Exception as e:
-    #             messagebox.showerror("删除失败", str(e))
 
     def 删除选中机器人(self):
         if not self.当前机器人ID:
