@@ -19,14 +19,14 @@ class 机器人设置:
     服务器:str="国际服"
     部落冲突包名: str = None
     欲进攻的最小资源:int=700000
-    开启刷墙=True
+    开启刷墙:bool=False
+    刷墙起始金币:int=100000
+    刷墙起始圣水: int = 100000
 
     def __post_init__(self):
         self.部落冲突包名 = ("com.supercell.clashofclans"
                         if self.服务器 == "国际服" else
                         "com.tencent.tmgp.supercell.clashofclans")
-
-
 
 @dataclass
 class 运行时状态:
@@ -305,3 +305,6 @@ if __name__ == "__main__":
     print("全部机器人设置：")
     for 标志, 设置 in 全部设置.items():
         print(f"{标志} -> {设置}")
+
+
+    print(数据库.获取最新完整状态("模拟器索引0").状态数据["资源"]["金币"])

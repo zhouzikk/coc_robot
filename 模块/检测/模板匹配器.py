@@ -1,4 +1,6 @@
 # 模板匹配器.py
+import sys
+
 import cv2
 import numpy as np
 import threading
@@ -18,6 +20,12 @@ class 模板匹配引擎:
                 cls._单例实例 = super().__new__(cls)
         return cls._单例实例
 
+    def 获取资源目录(self):
+        """兼容 PyInstaller 打包后的资源目录"""
+        if hasattr(sys, "_MEIPASS"):
+            return Path(sys._MEIPASS)
+        return Path.cwd()  # 或者 Path(__file__).parent
+
     def __init__(self, 最大缓存数=50, 图片库路径: Union[str, Path] = None):
         """初始化模板匹配引擎
 
@@ -28,8 +36,11 @@ class 模板匹配引擎:
         if self.__class__._已初始化:
             return
 
+
         # 初始化路径配置
-        self.图片库路径 = Path(图片库路径) if 图片库路径 else Path.cwd() / "img"
+        资源目录 = self.获取资源目录()
+        self.图片库路径 = Path(图片库路径) if 图片库路径 else 资源目录 / "img"
+
         if not self.图片库路径.exists():
             raise ValueError(f"图片库路径不存在：{self.图片库路径}")
 

@@ -27,6 +27,7 @@ class 增强型机器人控制界面:
         self._配置现代化样式()
         self._加载保存的配置()  # 启动时自动加载
         self.master.protocol("WM_DELETE_WINDOW", self._窗口关闭处理)
+        self._更新按钮状态()
 
 
 
@@ -65,7 +66,7 @@ class 增强型机器人控制界面:
     def _定时刷新(self):
         self.更新机器人列表()
         self.更新日志显示()
-        self.master.after(50, self._定时刷新)
+        self.master.after(500, self._定时刷新)
 
 
     def 更新日志显示(self):
@@ -75,7 +76,6 @@ class 增强型机器人控制界面:
             模拟日志 = [
                 f"[{time.strftime('%H:%M:%S')}] 系统状态正常",
                 f"[{time.strftime('%H:%M:%S')}] 正在处理事件"
-               # f"[{time.strftime('%H:%M:%S')}] 警告：机器人B 响应超时"
             ]
         else:
             日志列表 = 当前机器人.数据库.查询日志历史(当前机器人.机器人标志)
@@ -176,6 +176,17 @@ class 增强型机器人控制界面:
         ttk.Button(控制按钮框架, text="继续", command=self.继续机器人).pack(side=tk.LEFT, padx=5)
         ttk.Button(控制按钮框架, text="停止", command=self.停止机器人).pack(side=tk.LEFT,padx=5)
 
+        self.机器人列表框.bind("<Button-1>", self.处理列表点击)
+
+    def 处理列表点击(self, event):
+        """处理列表点击事件以实现取消选择"""
+        item = self.机器人列表框.identify_row(event.y)
+        if not item:  # 点击空白处
+            self.机器人列表框.selection_remove(self.机器人列表框.selection())
+            self.当前机器人ID = None
+            self._更新按钮状态()
+            self.更新状态显示()
+
     def 启动机器人(self):
         机器人 = self.获取当前机器人()
         if 机器人:
@@ -232,6 +243,8 @@ class 增强型机器人控制界面:
             ('模拟器索引', 'spinbox', (0, 99, 1)),
             ('服务器', 'combo', ['国际服', '国服']),
             ('最小资源', 'entry', '200000')
+            ("是否开启刷墙","Checkbutton",0)
+
         ]
         self.配置输入项 = {}
         for 行, (标签, 类型, 默认值) in enumerate(配置项定义):
@@ -245,18 +258,91 @@ class 增强型机器人控制界面:
                 控件.current(0)
             elif 类型 == 'spinbox':
                 控件 = ttk.Spinbox(配置表单, from_=默认值[0], to=默认值[1], increment=默认值[2])
+            elif 类型=='Checkbutton':
+
+                控件=tk.Checkbutton(窗口, text="苹果", variable=苹果)
 
             控件.grid(row=行, column=1, padx=5, pady=5, sticky=tk.EW)
+
             self.配置输入项[标签] = 控件
             ttk.Label(配置表单, text="*" if 标签 == "机器人标识" else "").grid(row=行, column=2, sticky=tk.W)
 
-        # 配置操作按钮
+
         按钮框架 = ttk.Frame(配置框架)
-        按钮框架.pack(pady=10)
-        ttk.Button(按钮框架, text="新建机器人", command=self.新建机器人).pack(side=tk.LEFT, padx=5)
-        ttk.Button(按钮框架, text="应用更改", command=self.应用更改).pack(side=tk.LEFT, padx=5)
-        ttk.Button(按钮框架, text="撤销更改", command=self.撤销更改).pack(side=tk.LEFT, padx=5)
+        按钮框架.pack(pady=10, fill=tk.X)
+
+        # 状态显示标签
+        self.配置状态标签 = ttk.Label(按钮框架, text="就绪", foreground="#666")
+        self.配置状态标签.pack(side=tk.LEFT, padx=50)
+
+        # 按钮容器（右对齐）
+        操作按钮容器 = ttk.Frame(按钮框架)
+        操作按钮容器.pack(side=tk.LEFT)
+
+
+        # 动态按钮组
+        self.主操作按钮 = ttk.Button(
+            操作按钮容器,
+            text="新建机器人",
+            command=self._处理主操作
+        )
+        self.主操作按钮.pack(side=tk.LEFT, padx=2)
+
+        self.次要操作按钮 = ttk.Button(
+            操作按钮容器,
+            text="重置表单",
+            command=self._重置表单操作
+        )
+        self.次要操作按钮.pack(side=tk.LEFT, padx=2)
+
+        # 初始状态
+        self._更新按钮状态()
         右侧容器.add(配置框架, text="配置管理")
+
+    def _更新按钮状态(self):
+        """根据当前模式更新按钮状态"""
+        # 机器人选择变化时
+        # 新建 / 保存操作完成后
+        # 表单重置时
+        # 界面初始化
+        #这四个都有调用刷新
+        if self.当前机器人ID is None:  # 新建模式
+            self.主操作按钮.configure(text="创建新机器人")
+            self.次要操作按钮.configure(text="清空表单", state=tk.NORMAL)
+            self.配置状态标签.configure(text="正在创建新配置")
+        else:  # 编辑模式
+            self.主操作按钮.configure(text="保存修改")
+            self.次要操作按钮.configure(text="放弃修改", state=tk.NORMAL)
+            self.配置状态标签.configure(text=f"正在编辑：{self.当前机器人ID}")
+
+    def _处理主操作(self):
+        """智能处理保存/创建操作"""
+        if self.当前机器人ID:
+            self.应用更改()
+        else:
+            self._执行新建操作()
+
+    def _重置表单操作(self):
+        """根据模式执行不同重置操作"""
+        if self.当前机器人ID:
+            self.载入选中配置()  # 放弃修改
+            self.配置状态标签.configure(text="已恢复原始配置", foreground="green")
+        else:
+            self.新建机器人()
+            self.配置状态标签.configure(text="表单已重置", foreground="blue")
+        self._更新按钮状态()
+        self.master.after(2000, lambda: self.配置状态标签.configure(text=""))
+
+    def _执行新建操作(self):
+        # 执行实际的创建逻辑
+        try:
+            self.应用更改()
+            self._更新按钮状态()
+            self.配置状态标签.configure(text="创建成功！", foreground="darkgreen")
+        except Exception as e:
+            self.配置状态标签.configure(text=f"创建失败：{str(e)}", foreground="red")
+        finally:
+            self.master.after(2000, self._更新按钮状态)
 
     def 新建机器人(self):
         """清空表单准备新建"""
@@ -279,7 +365,7 @@ class 增强型机器人控制界面:
         if not 配置数据["机器人标识"].strip():
             messagebox.showerror("错误", "机器人标识不能为空！")
             return
-
+        print(配置数据)
         try:
             新配置 = 机器人设置(
                 雷电模拟器索引=int(配置数据["模拟器索引"]),
@@ -295,6 +381,7 @@ class 增强型机器人控制界面:
             self._创建新机器人(配置数据["机器人标识"], 新配置)
         else:
             self._更新机器人配置(配置数据["机器人标识"], 新配置)
+        self._更新按钮状态()
 
     def _创建新机器人(self, 标识, 配置):
         if 标识 in self.监控中心.机器人池:
@@ -328,7 +415,7 @@ class 增强型机器人控制界面:
 
             # 更新配置并保存
             #self.监控中心.更新机器人配置(原标识, 新标识, 新配置)
-            self.数据库.保存机器人设置(原标识, 新标识, 新配置)
+            self.数据库.保存机器人设置(原标识, 新配置)
             self.当前机器人ID = 新标识
             self.更新机器人列表()
             self.记录操作日志(f"已更新配置：{原标识} → {新标识}")
@@ -374,6 +461,7 @@ class 增强型机器人控制界面:
         选中项 = self.机器人列表框.selection()
         if 选中项:
             self.当前机器人ID = self.机器人列表框.item(选中项[0], 'text')
+            self._更新按钮状态()
             选中项 = self.机器人列表框.selection()
             if 选中项:
                 新机器人ID = self.机器人列表框.item(选中项[0], 'text')
@@ -382,6 +470,7 @@ class 增强型机器人控制界面:
                     self.载入选中配置()
                     self.更新状态显示()
                     self.上一次机器人ID = 新机器人ID
+
             # self.载入选中配置()
             #
             # self.更新状态显示()
@@ -395,6 +484,7 @@ class 增强型机器人控制界面:
             self.配置输入项["服务器"].set(配置.服务器)
             self.配置输入项["最小资源"].delete(0, tk.END)
             self.配置输入项["最小资源"].insert(0, str(配置.欲进攻的最小资源))
+            self._更新按钮状态()
 
     def 更新状态显示(self):
         if robot := self.获取当前机器人():
@@ -427,6 +517,20 @@ class 增强型机器人控制界面:
 
         # 恢复选择
         if self.当前机器人ID and self.当前机器人ID in self.监控中心.机器人池:
+            for item in self.机器人列表框.get_children():
+                if self.机器人列表框.item(item, 'text') == self.当前机器人ID:
+                    self.机器人列表框.selection_set(item)
+                    break
+
+        # 清除无效选择
+        if self.当前机器人ID and self.当前机器人ID not in self.监控中心.机器人池:
+            self.当前机器人ID = None
+
+        # 清除所有选择
+        self.机器人列表框.selection_remove(self.机器人列表框.selection())
+
+        # 重新设置选择（如果有当前ID）
+        if self.当前机器人ID:
             for item in self.机器人列表框.get_children():
                 if self.机器人列表框.item(item, 'text') == self.当前机器人ID:
                     self.机器人列表框.selection_set(item)

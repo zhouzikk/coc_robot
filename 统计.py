@@ -15,6 +15,12 @@ def 统计代码行数(目录):
         if 'rapidocr_onnxruntime' in 根:
             continue
 
+        if 'dist' in 根:
+            continue
+
+        if 'build' in 根:
+            continue
+
         for 文件名 in 文件名列表:
             if 文件名.endswith(".py"):  # 只统计 Python 文件
                 文件路径 = os.path.join(根, 文件名)
