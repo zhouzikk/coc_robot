@@ -40,7 +40,7 @@ class 城墙升级任务(基础任务):
                 if self.处理OCR结果(上下文, ocr结果):
                     return True  # 成功升级
 
-                if "其它升级" in ocr结果.__str__() or "升级中" in ocr结果.__str__():
+                if "其他升级" in ocr结果.__str__() or "升级中" in ocr结果.__str__():
                     break
 
                 # 滑动屏幕
