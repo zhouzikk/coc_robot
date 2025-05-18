@@ -75,7 +75,12 @@ class 增强型机器人控制界面:
         if 当前机器人 is None:
             模拟日志 = [
                 f"[{time.strftime('%H:%M:%S')}] 系统状态正常",
-                f"[{time.strftime('%H:%M:%S')}] 正在处理事件"
+                f"[{time.strftime('%H:%M:%S')}] 欢迎使用脚本，具体使用步骤如下:",
+                f"[{time.strftime('%H:%M:%S')}] 1.在模拟器中安装部落冲突并登录你的账号，确保进入主世界。",
+                f"[{time.strftime('%H:%M:%S')}] 2.模拟器分辨率设置宽800，高600，dpi160",
+                f"[{time.strftime('%H:%M:%S')}] 3.部落冲突中设置配兵,目前支持所有普通兵种,超级兵种支持超级野蛮人以及超级哥布林",
+                f"[{time.strftime('%H:%M:%S')}] 4.打开游戏后",
+                f"[{time.strftime('%H:%M:%S')}] 5.先在左边选中需要启动的账号,点击'启动'按钮运行脚本"
             ]
         else:
             日志列表 = 当前机器人.数据库.查询日志历史(当前机器人.机器人标志)
@@ -242,8 +247,10 @@ class 增强型机器人控制界面:
             ('机器人标识', 'entry', 'robot_'),
             ('模拟器索引', 'spinbox', (0, 99, 1)),
             ('服务器', 'combo', ['国际服', '国服']),
-            ('最小资源', 'entry', '200000')
-            ("是否开启刷墙","Checkbutton",0)
+            ('最小资源', 'entry', '200000'),
+            ('是否开启刷墙', 'combo', ['开启', '关闭']),
+            ('刷墙起始金币', 'entry', '200000'),
+            ('刷墙起始圣水', 'entry', '200000'),
 
         ]
         self.配置输入项 = {}
@@ -258,9 +265,7 @@ class 增强型机器人控制界面:
                 控件.current(0)
             elif 类型 == 'spinbox':
                 控件 = ttk.Spinbox(配置表单, from_=默认值[0], to=默认值[1], increment=默认值[2])
-            elif 类型=='Checkbutton':
 
-                控件=tk.Checkbutton(窗口, text="苹果", variable=苹果)
 
             控件.grid(row=行, column=1, padx=5, pady=5, sticky=tk.EW)
 
@@ -365,12 +370,16 @@ class 增强型机器人控制界面:
         if not 配置数据["机器人标识"].strip():
             messagebox.showerror("错误", "机器人标识不能为空！")
             return
-        print(配置数据)
+        #print(配置数据)
+
         try:
             新配置 = 机器人设置(
                 雷电模拟器索引=int(配置数据["模拟器索引"]),
                 服务器=配置数据["服务器"],
-                欲进攻的最小资源=int(配置数据["最小资源"])
+                欲进攻的最小资源=int(配置数据["最小资源"]),
+                开启刷墙=True if 配置数据["是否开启刷墙"]=="开启" else False,
+                刷墙起始金币=int(配置数据["刷墙起始金币"]),
+                刷墙起始圣水=int(配置数据["刷墙起始圣水"])
             )
         except ValueError as e:
             messagebox.showerror("配置错误", f"数值格式错误: {str(e)}")
@@ -484,6 +493,14 @@ class 增强型机器人控制界面:
             self.配置输入项["服务器"].set(配置.服务器)
             self.配置输入项["最小资源"].delete(0, tk.END)
             self.配置输入项["最小资源"].insert(0, str(配置.欲进攻的最小资源))
+            # 开启刷墙 = True if 配置数据["是否开启刷墙"] == "开启" else False,
+            # 刷墙起始金币 = int(配置数据["刷墙起始金币"]),
+            # 刷墙起始圣水 = int(配置数据["刷墙起始圣水"])
+            self.配置输入项["是否开启刷墙"].set("开启" if 配置.开启刷墙 ==True else "关闭")
+            self.配置输入项["刷墙起始金币"].delete(0, tk.END)
+            self.配置输入项["刷墙起始金币"].insert(0, str(配置.刷墙起始金币))
+            self.配置输入项["刷墙起始圣水"].delete(0, tk.END)
+            self.配置输入项["刷墙起始圣水"].insert(0, str(配置.刷墙起始圣水))
             self._更新按钮状态()
 
     def 更新状态显示(self):
