@@ -20,6 +20,7 @@ from 核心.op import op类
 from 核心.键盘操作 import 键盘控制器
 from 核心.鼠标操作 import 鼠标控制器
 from 模块.雷电模拟器操作类 import 雷电模拟器操作类
+from 核心.核心异常们 import 图像获取失败
 
 
 class 自动化机器人:
