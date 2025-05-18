@@ -126,9 +126,9 @@ class 自动化机器人:
             print("-"*10+F"{self.机器人标志} 线程自然消亡"+"-"*10)
             self.停止事件.set()#标志目前线程已经停止了,以免监控中心一直启动
 
-        # except Exception as e:
-        #     上下文.发送重启请求(f"异常: {str(e)}")
-        #     print("-"*10+F"{self.机器人标志} 线程因为异常而消亡"+"-"*10+f"异常: {str(e)}")
+        except 图像获取失败 as e:
+             上下文.发送重启请求(f"异常: {str(e)}")
+             print("-"*10+F"{self.机器人标志} 线程因为异常而消亡"+"-"*10+f"异常: {str(e)}")
         except SystemExit as e:
             print("-"*10+F"{self.机器人标志} 线程因为捕获到退出而消亡"+"-"*10)
         finally:
