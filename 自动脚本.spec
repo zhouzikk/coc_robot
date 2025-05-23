@@ -6,14 +6,15 @@ from PyInstaller.utils.hooks import collect_submodules
 block_cipher = None
 
 a = Analysis(
-    ['测试入口2.py'],
+    ['UI入口.py'],
     pathex=['.'],
     binaries=[],
     datas=[
         ('img/*.*', 'img'),
         ('模块/**/*.*', '模块'),
         ('数据库/*.*', '数据库'),
-        ('核心/op-0.4.5_with_model/', 'op-0.4.5_with_model'),
+        ('核心/op-0.4.5_with_model/tools.dll', 'op-0.4.5_with_model/'),
+        ('核心/op-0.4.5_with_model/op_x64.dll', 'op-0.4.5_with_model/'),
         ('模块/检测/OCR识别器/rapidocr_onnxruntime/config.yaml','模块/检测/OCR识别器/rapidocr_onnxruntime/'),
         ('模块/检测/OCR识别器/rapidocr_onnxruntime/models/*.*','模块/检测/OCR识别器/rapidocr_onnxruntime/models/'),
         ('模块/检测/YOLO检测器/模型/*.*','模块/检测/YOLO检测器/模型/')
