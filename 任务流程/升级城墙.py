@@ -33,7 +33,7 @@ class 城墙升级任务(基础任务):
                 # OCR识别处理
                 ocr结果 = self.执行OCR识别(上下文)
 
-                #print(ocr结果)
+                print(ocr结果)
                 if not ocr结果:
                     continue
 
@@ -123,17 +123,23 @@ class 城墙升级任务(基础任务):
 
                 # 提取坐标点
                 坐标点列表 = 识别项[0]  # 是一个列表，里面是 4 个 [x, y]
-                #print(识别项)
+                print(识别项)
                 # 分别提取出所有 x 和所有 y
                 所有x = [点[0] for 点 in 坐标点列表]
                 所有y = [点[1] for 点 in 坐标点列表]
 
                 # 求出左上角和右下角的 x 和 y（做近似包围框处理）
-                左上x = int(min(所有x)) + 266
-                左上y = int(min(所有y)) + 68
+                # 左上x = int(min(所有x)) + 266
+                # 左上y = int(min(所有y)) + 68
+                # # 右下x = int(max(所有x)) + 266
+                # 右下x = 559
+                # 右下y = int(max(所有y)) + 68
+                #
+                左上x = int(min(所有x)) + 219
+                左上y = int(min(所有y)) + 57
                 # 右下x = int(max(所有x)) + 266
-                右下x = 559
-                右下y = int(max(所有y)) + 68
+                右下x = 595
+                右下y = int(max(所有y)) + 57
             except Exception as e:
                 上下文.置脚本状态(f"坐标解析失败: {str(e)}")
                 continue
