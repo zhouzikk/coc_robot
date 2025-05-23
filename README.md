@@ -48,7 +48,7 @@ pip install -r requirements.txt
 python UI入口.py
 ```
 
-如果你不知道如何安装python环境，请进群大神指点，或者在群文件下载exe版本。exe版本和本仓库完全一直4
+如果你不知道如何安装python环境，请进群大神指点，或者在群文件下载exe版本。exe版本和本仓库完全一致
 
 ---
 
