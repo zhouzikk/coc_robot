@@ -11,7 +11,7 @@ jobs:
     runs-on: windows-latest  # 使用Windows构建环境
     permissions:  # 必要的权限声明
       contents: write
-      releases: write
+      packages: write
 
     steps:
     # 1. 代码检出
