@@ -3,46 +3,62 @@ name: Auto Build Release
 on:
   push:
     tags:
-      - 'v*'  # 使用v开头的tag触发
-  workflow_dispatch: 
+      - 'v*'  # 触发条件：推送v开头的标签时自动运行
+  workflow_dispatch:  # 允许手动触发
 
 jobs:
   build-release:
-    runs-on: windows-latest  # Windows环境用于生成exe
-    
+    runs-on: windows-latest  # 使用Windows构建环境
+    permissions:  # 必要的权限声明
+      contents: write
+      releases: write
+
     steps:
-    # 步骤1：检出当前仓库代码
+    # 1. 代码检出
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # 获取完整提交历史
 
-    # 步骤2：配置Python环境
-    - name: Setup Python 3.10.9
+    # 2. 设置Python环境
+    - name: Setup Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.10.9'
-        architecture: 'x64'
+        python-version: '3.10.9'  # 精确指定Python版本
+        cache: 'pip'  # 自动缓存pip包
 
-    # 步骤3：安装依赖
+    # 3. 依赖安装（带缓存优化）
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pyinstaller
 
-    # 步骤4：执行打包（假设spec文件在仓库根目录）
+    # 4. 构建过程
     - name: Build with PyInstaller
+      shell: pwsh  # 显式使用PowerShell
       run: |
-        pyinstaller --noconfirm 自动脚本.spec
+        # 执行构建
+        pyinstaller --noconfirm "自动脚本.spec"
         
-        # 调试用：显示生成目录结构
-        Get-ChildItem -Path dist -Recurse | Format-Table -AutoSize
+        # 构建验证
+        $files = Get-ChildItem dist -Recurse -File
+        echo "生成文件列表："
+        $files | Format-Table FullName
+        echo "总文件数: $($files.Count)"
 
-    # 步骤5：上传到Release
-    - name: Upload Release Assets
+    # 5. 上传Release（优化版）
+    - name: Upload Release
       uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
       with:
+        token: ${{ secrets.GITHUB_TOKEN }}  # 标准传参方式
         files: |
-          dist/**/*  # 包含所有子目录内容
-        draft: false
-        prerelease: false
+          dist/**/*
+        draft: false  # 直接发布
+        prerelease: ${{ contains(github.ref, 'beta') || contains(github.ref, 'alpha') }}  # 自动识别测试版
+
+    # 6. 清理工作空间（可选）
+    - name: Cleanup
+      if: always()  # 无论成功失败都执行清理
+      run: |
+        Remove-Item -Recurse -Force build, dist -ErrorAction SilentlyContinue
