@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*'  # 使用v开头的tag触发
+  workflow_dispatch: 
 
 jobs:
   build-release:
