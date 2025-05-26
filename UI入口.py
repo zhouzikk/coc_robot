@@ -29,8 +29,6 @@ class 增强型机器人控制界面:
         self.master.protocol("WM_DELETE_WINDOW", self._窗口关闭处理)
         self._更新按钮状态()
 
-
-
     def _配置现代化样式(self):
         """配置现代化控件样式"""
         style = ttk.Style()
@@ -63,11 +61,11 @@ class 增强型机器人控制界面:
 
         # 输入控件
         style.configure("TEntry", padding=5, relief="flat")
+
     def _定时刷新(self):
         self.更新机器人列表()
         self.更新日志显示()
         self.master.after(500, self._定时刷新)
-
 
     def 更新日志显示(self):
         当前机器人 = self.获取当前机器人()
@@ -170,16 +168,15 @@ class 增强型机器人控制界面:
             标签.grid(row=idx // 2, column=idx % 2, sticky=tk.W, padx=5, pady=2)
 
         # 控制按钮
-        #控制按钮框架 = ttk.Frame(左侧容器)
+        # 控制按钮框架 = ttk.Frame(左侧容器)
 
-
-        控制按钮框架=ttk.LabelFrame(左侧容器, text="控制当前选中")
+        控制按钮框架 = ttk.LabelFrame(左侧容器, text="控制当前选中")
         控制按钮框架.pack(fill=tk.X, pady=5)
 
-        ttk.Button(控制按钮框架, text="启动", command=self.启动机器人).pack(side=tk.LEFT,padx=5)
-        ttk.Button(控制按钮框架, text="暂停", command=self.暂停机器人).pack(side=tk.LEFT,padx=5)
+        ttk.Button(控制按钮框架, text="启动", command=self.启动机器人).pack(side=tk.LEFT, padx=5)
+        ttk.Button(控制按钮框架, text="暂停", command=self.暂停机器人).pack(side=tk.LEFT, padx=5)
         ttk.Button(控制按钮框架, text="继续", command=self.继续机器人).pack(side=tk.LEFT, padx=5)
-        ttk.Button(控制按钮框架, text="停止", command=self.停止机器人).pack(side=tk.LEFT,padx=5)
+        ttk.Button(控制按钮框架, text="停止", command=self.停止机器人).pack(side=tk.LEFT, padx=5)
 
         self.机器人列表框.bind("<Button-1>", self.处理列表点击)
 
@@ -266,12 +263,10 @@ class 增强型机器人控制界面:
             elif 类型 == 'spinbox':
                 控件 = ttk.Spinbox(配置表单, from_=默认值[0], to=默认值[1], increment=默认值[2])
 
-
             控件.grid(row=行, column=1, padx=5, pady=5, sticky=tk.EW)
 
             self.配置输入项[标签] = 控件
             ttk.Label(配置表单, text="*" if 标签 == "机器人标识" else "").grid(row=行, column=2, sticky=tk.W)
-
 
         按钮框架 = ttk.Frame(配置框架)
         按钮框架.pack(pady=10, fill=tk.X)
@@ -283,7 +278,6 @@ class 增强型机器人控制界面:
         # 按钮容器（右对齐）
         操作按钮容器 = ttk.Frame(按钮框架)
         操作按钮容器.pack(side=tk.LEFT)
-
 
         # 动态按钮组
         self.主操作按钮 = ttk.Button(
@@ -310,7 +304,7 @@ class 增强型机器人控制界面:
         # 新建 / 保存操作完成后
         # 表单重置时
         # 界面初始化
-        #这四个都有调用刷新
+        # 这四个都有调用刷新
         if self.当前机器人ID is None:  # 新建模式
             self.主操作按钮.configure(text="创建新机器人")
             self.次要操作按钮.configure(text="清空表单", state=tk.NORMAL)
@@ -370,14 +364,14 @@ class 增强型机器人控制界面:
         if not 配置数据["机器人标识"].strip():
             messagebox.showerror("错误", "机器人标识不能为空！")
             return
-        #print(配置数据)
+        # print(配置数据)
 
         try:
             新配置 = 机器人设置(
                 雷电模拟器索引=int(配置数据["模拟器索引"]),
                 服务器=配置数据["服务器"],
                 欲进攻的最小资源=int(配置数据["最小资源"]),
-                开启刷墙=True if 配置数据["是否开启刷墙"]=="开启" else False,
+                开启刷墙=True if 配置数据["是否开启刷墙"] == "开启" else False,
                 刷墙起始金币=int(配置数据["刷墙起始金币"]),
                 刷墙起始圣水=int(配置数据["刷墙起始圣水"])
             )
@@ -423,7 +417,7 @@ class 增强型机器人控制界面:
                 robot.停止()
 
             # 更新配置并保存
-            #self.监控中心.更新机器人配置(原标识, 新标识, 新配置)
+            # self.监控中心.更新机器人配置(原标识, 新标识, 新配置)
             self.数据库.保存机器人设置(原标识, 新配置)
             self.当前机器人ID = 新标识
             self.更新机器人列表()
@@ -496,7 +490,7 @@ class 增强型机器人控制界面:
             # 开启刷墙 = True if 配置数据["是否开启刷墙"] == "开启" else False,
             # 刷墙起始金币 = int(配置数据["刷墙起始金币"]),
             # 刷墙起始圣水 = int(配置数据["刷墙起始圣水"])
-            self.配置输入项["是否开启刷墙"].set("开启" if 配置.开启刷墙 ==True else "关闭")
+            self.配置输入项["是否开启刷墙"].set("开启" if 配置.开启刷墙 == True else "关闭")
             self.配置输入项["刷墙起始金币"].delete(0, tk.END)
             self.配置输入项["刷墙起始金币"].insert(0, str(配置.刷墙起始金币))
             self.配置输入项["刷墙起始圣水"].delete(0, tk.END)
