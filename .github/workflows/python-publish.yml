@@ -55,6 +55,13 @@ jobs:
         echo "压缩包名称: $zipName"
         echo "ZIP_PATH=$zipName" >> $env:GITHUB_ENV
 
+    # 生成当前时间字符串
+    - name: 生成构建时间
+      shell: pwsh
+      run: |
+        $时间 = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+        echo "BUILD_TIME=$时间" >> $env:GITHUB_ENV
+
     # 新增步骤：获取上一个版本tag及提交日志
     - name: 获取上一个版本Tag和提交日志
       shell: bash
@@ -84,7 +91,7 @@ jobs:
         tag_name: ${{ github.ref_name }}
         name: "版本 ${{ github.ref_name }}"
         body: |
-          自动构建于 $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
+          构建于 ${{ env.BUILD_TIME }}
 
           提交日志：
           ${{ env.CHANGELOG }}
