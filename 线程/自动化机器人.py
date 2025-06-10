@@ -148,6 +148,7 @@ class 自动化机器人:
 
         # 主动停止不视为超时
         if self.停止事件.is_set():
+
             return (False, F"{self.机器人标志} 线程已主动停止,不是异常状态")
 
 
