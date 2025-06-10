@@ -55,14 +55,39 @@ jobs:
         echo "压缩包名称: $zipName"
         echo "ZIP_PATH=$zipName" >> $env:GITHUB_ENV
 
-    # 6. 上传发布包
+    # 新增步骤：获取上一个版本tag及提交日志
+    - name: 获取上一个版本Tag和提交日志
+      shell: bash
+      run: |
+        CURRENT_TAG=${GITHUB_REF#refs/tags/}
+        PREVIOUS_TAG=$(git tag --sort=-creatordate | grep -v "^${CURRENT_TAG}$" | head -n 1)
+
+        echo "当前版本: $CURRENT_TAG"
+        echo "上一个版本: $PREVIOUS_TAG"
+
+        if [ -z "$PREVIOUS_TAG" ]; then
+          LOGS=$(git log --oneline)
+        else
+          LOGS=$(git log --oneline ${PREVIOUS_TAG}..${CURRENT_TAG})
+        fi
+
+        # 转义换行符写入环境变量
+        LOGS_ESCAPED=$(echo "$LOGS" | sed ':a;N;$!ba;s/\n/\\n/g')
+
+        echo "CHANGELOG=$LOGS_ESCAPED" >> $GITHUB_ENV
+
+    # 6. 上传发布包，body中引用CHANGELOG
     - name: 发布到GitHub
       uses: softprops/action-gh-release@v1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         tag_name: ${{ github.ref_name }}
         name: "版本 ${{ github.ref_name }}"
-        body: "自动构建于 $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+        body: |
+          自动构建于 $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
+
+          提交日志：
+          ${{ env.CHANGELOG }}
         files: |
           ${{ env.ZIP_PATH }}
         draft: false
