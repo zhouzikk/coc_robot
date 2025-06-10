@@ -49,7 +49,7 @@ jobs:
     - name: 压缩发布文件
       shell: pwsh
       run: |
-        $version = ${{ github.ref_name }}.Replace("v","")
+        $version = "${{ github.ref_name }}".Replace("v","")
         $zipName = "发布包_v${version}_$(Get-Date -Format 'yyyyMMdd').zip"
         Compress-Archive -Path "./dist/*" -DestinationPath "./$zipName" -Force
         echo "压缩包名称: $zipName"
