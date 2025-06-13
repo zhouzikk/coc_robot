@@ -46,6 +46,12 @@ class 进入世界任务基类(基础任务):
                 self.滑动屏幕(上下文, self.滑动配置.起点, self.滑动配置.终点)
                 上下文.脚本延时(1000)
 
+                if time.time() - 开始时间 > 3:
+                    上下文.置脚本状态("切换世界超过三秒,尝试拉远视距")
+                    for _ in range(20):
+                        上下文.键盘.按字符按压("f5")
+                        上下文.脚本延时(50)
+
             raise RuntimeError(f"操作超时：未找到{self.状态文本}入口")
         except Exception as e:
             self.异常处理(上下文, e)
