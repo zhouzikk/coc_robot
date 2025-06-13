@@ -1,15 +1,10 @@
-import random
-
-import cv2
-import numpy as np
-
 from 任务流程.基础任务框架 import 任务上下文, 基础任务
 from 模块.检测.OCR识别器 import 安全OCR引擎
 from 模块.检测.YOLO检测器 import 线程安全YOLO检测器
 from 模块.检测.模板匹配器 import 模板匹配引擎
 
 
-class 更新资源状态任务(基础任务):
+class 更新家乡资源状态任务(基础任务):
     """自动检测并升级城墙"""
     def __init__(self):
         self.ocr引擎 = 安全OCR引擎()

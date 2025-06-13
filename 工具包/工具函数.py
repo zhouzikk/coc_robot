@@ -32,3 +32,29 @@ def 显示图像(屏幕图像):
     cv2.imshow("test",屏幕图像)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
+def 是否家乡资源打满(资源字典: dict) -> bool:
+    """根据资源字典判断是否资源打满"""
+
+    # 单项资源打满阈值，例如末尾 ≥ 4 个 0（十万级别）
+    def 是打满(数值: int) -> bool:
+        return str(数值).endswith("000") or str(数值).endswith("00000")
+
+    return (
+            是打满(资源字典.get("金币", 0)) and
+            是打满(资源字典.get("圣水", 0)) and
+            是打满(资源字典.get("黑油", 0))
+    )
+
+
+def 是否夜世界资源打满(资源字典: dict) -> bool:
+    """根据资源字典判断是否资源打满"""
+
+    # 单项资源打满阈值，例如末尾 ≥ 4 个 0（十万级别）
+    def 是打满(数值: int) -> bool:
+        return str(数值).endswith("000") or str(数值).endswith("00000")
+
+    return (
+            是打满(资源字典.get("金币", 0)) and
+            是打满(资源字典.get("圣水", 0))
+    )
