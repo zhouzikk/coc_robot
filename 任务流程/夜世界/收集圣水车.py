@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from 任务流程.基础任务框架 import 基础任务, 任务上下文
-from 任务流程.夜世界打鱼.夜世界基础任务 import 夜世界基础任务
+from 任务流程.基础任务框架 import 任务上下文
+from 任务流程.夜世界.夜世界打鱼.夜世界基础任务类 import 夜世界基础任务
 
 
 @dataclass
@@ -16,7 +16,7 @@ class 收集圣水车任务(夜世界基础任务):
         try:
             找不到夜世界船的次数=0
             while True:
-                是否匹配,( x, y)=self.是否出现图片("夜世界的船1.bmp|夜世界的船2.bmp|夜世界的船3.bmp|夜世界的船4.bmp|夜世界的船6.bmp")
+                是否匹配,( x, y)=self.是否出现图片("夜世界的船1.bmp|夜世界的船2.bmp|夜世界的船3.bmp|夜世界的船4.bmp|夜世界的船6.bmp|夜世界的船7.bmp")
                 if 是否匹配:
                     # 点击车
                     self.上下文.点击(x - 118, y + 46)
