@@ -1,10 +1,8 @@
-import time
 from 任务流程.基础任务框架 import 任务上下文, 基础任务
-from 任务流程.夜世界打鱼.下兵_步骤3 import 下兵
-from 任务流程.夜世界打鱼.打开进攻页面任务_步骤1 import 打开进攻页面
+from 任务流程.夜世界打鱼.下兵 import 下兵
+from 任务流程.夜世界打鱼.打开进攻页面任务 import 打开进攻页面
 from 任务流程.夜世界打鱼.等待回营或第二场战斗 import 等待回营或第二次战斗
-from 任务流程.夜世界打鱼.等待进入战斗_步骤2 import 等待进入战斗
-from 任务流程.等待战斗结束并回营 import 等待战斗结束并回营任务
+from 任务流程.夜世界打鱼.等待进入战斗 import 等待进入战斗
 from 模块.检测.模板匹配器 import 模板匹配引擎
 
 
