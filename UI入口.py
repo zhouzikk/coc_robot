@@ -65,7 +65,7 @@ class 增强型机器人控制界面:
     def _定时刷新(self):
         self.更新机器人列表()
         self.更新日志显示()
-        self.master.after(500, self._定时刷新)
+        self.master.after(100, self._定时刷新)
 
     def 更新日志显示(self):
         当前机器人 = self.获取当前机器人()
@@ -78,7 +78,8 @@ class 增强型机器人控制界面:
                 f"[{time.strftime('%H:%M:%S')}] 2.模拟器分辨率设置宽800，高600，dpi160",
                 f"[{time.strftime('%H:%M:%S')}] 3.部落冲突中设置配兵,目前支持所有普通兵种,超级兵种支持超级野蛮人以及超级哥布林",
                 f"[{time.strftime('%H:%M:%S')}] 4.打开游戏后",
-                f"[{time.strftime('%H:%M:%S')}] 5.先在左边选中需要启动的账号,点击'启动'按钮运行脚本"
+                f"[{time.strftime('%H:%M:%S')}] 5.先在左边选中需要启动的账号,点击'启动'按钮运行脚本",
+                f"[{time.strftime('%H:%M:%S')}] 6.或者在右边配置页面新建机器人再启动"
             ]
         else:
             日志列表 = 当前机器人.数据库.查询日志历史(当前机器人.机器人标志)
@@ -140,13 +141,14 @@ class 增强型机器人控制界面:
         左侧容器.pack(side=tk.LEFT, fill=tk.BOTH, padx=5, pady=5)
 
         # 机器人列表管理
-        self.机器人列表框 = ttk.Treeview(左侧容器, columns=('status'), show='tree headings', height=15)
+        self.机器人列表框 = ttk.Treeview(左侧容器, columns=('status'), show='tree headings', height=8)
         self.机器人列表框.column('#0', width=250, anchor=tk.W)
         self.机器人列表框.heading('#0', text='机器人标识', anchor=tk.W)
         self.机器人列表框.column('status', width=80, anchor=tk.CENTER)
         self.机器人列表框.heading('status', text='状态', anchor=tk.CENTER)
         self.机器人列表框.pack(pady=5, fill=tk.BOTH, expand=True)
         self.机器人列表框.bind('<<TreeviewSelect>>', self.更新当前选择)
+        self.机器人列表框.bind("<Button-1>", self.处理列表点击)
 
         # 列表操作按钮
         列表操作面板 = ttk.Frame(左侧容器)
@@ -158,8 +160,8 @@ class 增强型机器人控制界面:
         self.当前状态面板 = ttk.LabelFrame(左侧容器, text="当前状态")
         self.当前状态面板.pack(fill=tk.X, pady=5)
         self.状态标签组 = {
-            '标识': ttk.Label(self.当前状态面板, text="标识：-"),
-            '状态': ttk.Label(self.当前状态面板, text="状态：未选择"),
+            '标识': ttk.Label(self.当前状态面板, text="标识：未选择"),
+            '状态': ttk.Label(self.当前状态面板, text="状态：-"),
             '服务器': ttk.Label(self.当前状态面板, text="服务器：-"),
             '模拟器': ttk.Label(self.当前状态面板, text="模拟器：-"),
             '资源': ttk.Label(self.当前状态面板, text="最小资源：-")
@@ -178,7 +180,7 @@ class 增强型机器人控制界面:
         ttk.Button(控制按钮框架, text="继续", command=self.继续机器人).pack(side=tk.LEFT, padx=5)
         ttk.Button(控制按钮框架, text="停止", command=self.停止机器人).pack(side=tk.LEFT, padx=5)
 
-        self.机器人列表框.bind("<Button-1>", self.处理列表点击)
+
 
     def 处理列表点击(self, event):
         """处理列表点击事件以实现取消选择"""
@@ -188,6 +190,7 @@ class 增强型机器人控制界面:
             self.当前机器人ID = None
             self._更新按钮状态()
             self.更新状态显示()
+            self._重置表单操作()
 
     def 启动机器人(self):
         机器人 = self.获取当前机器人()
@@ -331,7 +334,7 @@ class 增强型机器人控制界面:
             self.新建机器人()
             self.配置状态标签.configure(text="表单已重置", foreground="blue")
         self._更新按钮状态()
-        self.master.after(2000, lambda: self.配置状态标签.configure(text=""))
+        #self.master.after(2000, lambda: self.配置状态标签.configure(text=""))
 
     def _执行新建操作(self):
         # 执行实际的创建逻辑
@@ -512,6 +515,12 @@ class 增强型机器人控制界面:
             self.状态标签组['服务器'].config(text=f"服务器：{robot.设置.服务器}")
             self.状态标签组['模拟器'].config(text=f"模拟器：{robot.设置.雷电模拟器索引}")
             self.状态标签组['资源'].config(text=f"最小资源：{robot.设置.欲进攻的最小资源}")
+        else:
+            self.状态标签组['标识'].config(text=f"标识：未选择")
+            self.状态标签组['状态'].config(text=f"状态：-")
+            self.状态标签组['服务器'].config(text=f"服务器：-")
+            self.状态标签组['模拟器'].config(text=f"模拟器：-")
+            self.状态标签组['资源'].config(text=f"最小资源：-")
 
     def 更新机器人列表(self):
         当前选择 = self.机器人列表框.selection()

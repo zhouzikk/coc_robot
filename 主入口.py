@@ -12,8 +12,9 @@ from 线程.自动化机器人 import 自动化机器人
 class 机器人监控中心:
     """增强型监控服务"""
 
-    def __init__(self):
+    def __init__(self,日志队列=None):
         self.机器人池 = {}
+        self.日志队列 = 日志队列#UI从这个队列获取日志
         self.全局消息队列 = queue.Queue()#所有在线用户共用一个消息队列和数据库
         self.数据库 = 任务数据库()
         self.运行标志 = True
@@ -33,7 +34,7 @@ class 机器人监控中心:
         if 机器人标志 in self.机器人池:
             raise ValueError(f"机器人标志[{机器人标志}],已存在")
         else:
-            机器人实例 = 自动化机器人(机器人标志, self.全局消息队列, self.数据库)
+            机器人实例 = 自动化机器人(机器人标志, self.全局消息队列, self.数据库,self.日志队列)
 
         if 初始设置:
             self.数据库.保存机器人设置(机器人标志, 初始设置)

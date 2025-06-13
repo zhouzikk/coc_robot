@@ -1,4 +1,5 @@
 from 任务流程.基础任务框架 import 任务上下文, 基础任务
+from 工具包.工具函数 import 显示图像
 from 模块.检测.OCR识别器 import 安全OCR引擎
 from 模块.检测.YOLO检测器 import 线程安全YOLO检测器
 from 模块.检测.模板匹配器 import 模板匹配引擎
@@ -21,6 +22,7 @@ class 更新夜世界资源状态任务(基础任务):
         try:
 
             图像 = 上下文.op.获取屏幕图像cv(593,3,793,105)
+            #显示图像(图像)
             result, _ = self.ocr引擎(图像)
             #print(result)
             金币文本 = str(result[0][1]) if len(result) > 0 else "0"

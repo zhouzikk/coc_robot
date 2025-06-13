@@ -4,6 +4,7 @@ import queue
 import random
 import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from 工具包.工具函数 import 生成贝塞尔轨迹
@@ -25,10 +26,11 @@ class 任务上下文:
     雷电模拟器:雷电模拟器操作类
     键盘:键盘控制器
     鼠标:鼠标控制器
+    置脚本状态:Callable
 
-    def 置脚本状态(self, 日志内容:str, 超时的时间:float=60):
-        print(f"[机器人消息] {self.机器人标志} {time.strftime('%Y年%m月%d日 %H:%M:%S')}: {日志内容}")
-        self.数据库.记录日志(self.机器人标志, 日志内容, time.time() + 超时的时间)
+    # def 置脚本状态(self, 日志内容:str, 超时的时间:float=60):
+    #     print(f"[机器人消息] {self.机器人标志} {time.strftime('%Y年%m月%d日 %H:%M:%S')}: {日志内容}")
+    #     self.数据库.记录日志(self.机器人标志, 日志内容, time.time() + 超时的时间)
 
     def 发送重启请求(self, 原因: str):
         """发送重启请求并终止当前线程"""
