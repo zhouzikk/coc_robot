@@ -1,6 +1,5 @@
 from 任务流程.基础任务框架 import 任务上下文
-from 任务流程.夜世界打鱼.夜世界基础任务 import 夜世界基础任务
-from 模块.检测.模板匹配器 import 模板匹配引擎
+from 任务流程.夜世界.夜世界打鱼.夜世界基础任务类 import 夜世界基础任务
 import random
 
 class 下兵(夜世界基础任务):
