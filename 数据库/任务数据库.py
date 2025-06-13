@@ -23,6 +23,7 @@ class 机器人设置:
     开启刷墙:bool=False
     刷墙起始金币:int=100000
     刷墙起始圣水: int = 100000
+    是否刷夜世界:bool=False
 
     def __post_init__(self):
         self.部落冲突包名 = ("com.supercell.clashofclans"
