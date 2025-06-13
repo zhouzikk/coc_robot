@@ -1,7 +1,9 @@
+import queue
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox
 import time
 from 主入口 import 机器人监控中心
+from 工具包.工具函数 import 打印运行耗时, 工具提示
 from 数据库.任务数据库 import 机器人设置, 任务数据库
 from 线程.自动化机器人 import 自动化机器人
 from sv_ttk import set_theme
@@ -9,10 +11,12 @@ from sv_ttk import set_theme
 
 class 增强型机器人控制界面:
     def __init__(self, master, 监控中心):
+
         self.master = master
         self.监控中心 = 监控中心
+        self.日志队列 = 监控中心.日志队列
         self.master.title("机器人监控控制中心 v2.0")
-        self._设置窗口尺寸(1000, 700)
+        self._设置窗口尺寸(1200, 700)
 
         self.当前机器人ID = None
         self.上一次机器人ID = None
@@ -22,12 +26,17 @@ class 增强型机器人控制界面:
         self._创建主框架()
         self._创建左侧控制面板()
         self._创建右侧配置面板()
-        self._定时刷新()
+        self.更新日志显示()
+        self._定时刷新机器人列表()
+        self._定时刷新日志()
         set_theme("light")
         self._配置现代化样式()
         self._加载保存的配置()  # 启动时自动加载
         self.master.protocol("WM_DELETE_WINDOW", self._窗口关闭处理)
         self._更新按钮状态()
+
+        self.日志缓存时间戳 = {}  # 记录每个机器人的最新日志时间戳
+        self.日志缓存内容 = {}  # 可选：记录日志内容缓存（如有必要保留所有日志）
 
     def _配置现代化样式(self):
         """配置现代化控件样式"""
@@ -62,11 +71,26 @@ class 增强型机器人控制界面:
         # 输入控件
         style.configure("TEntry", padding=5, relief="flat")
 
-    def _定时刷新(self):
-        self.更新机器人列表()
-        self.更新日志显示()
-        self.master.after(100, self._定时刷新)
+    def _定时刷新日志(self):
+        try:
+            日志消息 = self.日志队列.get_nowait()
 
+            当前机器人 = self.获取当前机器人()
+            机器人ID = 日志消息.get("机器人ID")
+
+            if 当前机器人 and 机器人ID == 当前机器人.机器人标志:
+                self.更新日志显示()
+        except queue.Empty:
+            pass
+        finally:
+            # 无论是否异常，都安排下一次调用
+            self.master.after(200, self._定时刷新日志)
+
+    def _定时刷新机器人列表(self):
+        self.更新机器人列表()
+        self.master.after(500, self._定时刷新机器人列表)
+
+    #@打印运行耗时
     def 更新日志显示(self):
         当前机器人 = self.获取当前机器人()
 
@@ -82,14 +106,28 @@ class 增强型机器人控制界面:
                 f"[{time.strftime('%H:%M:%S')}] 6.或者在右边配置页面新建机器人再启动"
             ]
         else:
-            日志列表 = 当前机器人.数据库.查询日志历史(当前机器人.机器人标志)
-            日志列表.sort(key=lambda 日志: 日志.记录时间)
+            机器人标志 = 当前机器人.机器人标志
+            # 获取上次记录时间戳
+            上次时间 = self.日志缓存时间戳.get(机器人标志, 0)
+            日志列表 = 当前机器人.数据库.查询日志历史(机器人标志, 起始时间=上次时间+ 0.00001)
+
+            if 日志列表:
+                # 更新缓存时间戳为最新日志时间
+                最新时间 = max(项.记录时间 for 项 in 日志列表)
+                self.日志缓存时间戳[机器人标志] = 最新时间
+
+            # 将缓存日志追加起来（如果你希望显示所有日志）
+            self.日志缓存内容.setdefault(机器人标志, []).extend(日志列表)
+
+            全部日志 = self.日志缓存内容[机器人标志]
+            全部日志.sort(key=lambda 日志: 日志.记录时间)
+
             模拟日志 = [
                 f"[{time.strftime('%H:%M:%S', time.localtime(项.记录时间))}] {项.机器人标志} {项.日志内容}"
-                for 项 in 日志列表
+                for 项 in 全部日志
             ]
 
-        # 🌟 记录当前滚动条位置（0.0 ~ 1.0）
+        # 🌟 记录滚动条位置
         当前视图 = self.日志文本框.yview()
 
         self.日志文本框.configure(state='normal')
@@ -100,11 +138,10 @@ class 增强型机器人控制界面:
 
         self.日志文本框.configure(state='disabled')
 
-        # 🌟 判断用户是否已经在底部（例如超过 0.95 就认为在底部）
+        # 🌟 判断用户是否在底部
         if 当前视图[1] > 0.95:
-            self.日志文本框.see(tk.END)  # 自动滚动
+            self.日志文本框.see(tk.END)
         else:
-            # 🌟 保持原来位置（注意必须在 state='normal' 后调用）
             self.日志文本框.yview_moveto(当前视图[0])
 
     def 获取当前机器人(self) -> 自动化机器人 | None:
@@ -188,6 +225,7 @@ class 增强型机器人控制界面:
         if not item:  # 点击空白处
             self.机器人列表框.selection_remove(self.机器人列表框.selection())
             self.当前机器人ID = None
+            self.更新日志显示()
             self._更新按钮状态()
             self.更新状态显示()
             self._重置表单操作()
@@ -244,18 +282,19 @@ class 增强型机器人控制界面:
         配置表单.pack(pady=10, padx=10, fill=tk.X)
 
         配置项定义 = [
-            ('机器人标识', 'entry', 'robot_'),
-            ('模拟器索引', 'spinbox', (0, 99, 1)),
-            ('服务器', 'combo', ['国际服', '国服']),
-            ('最小资源', 'entry', '200000'),
-            ('进攻资源边缘靠近比例下限', 'entry', '0.6'),
-            ('是否开启刷墙', 'combo', ['开启', '关闭']),
-            ('刷墙起始金币', 'entry', '200000'),
-            ('刷墙起始圣水', 'entry', '200000'),
-
+            ('机器人标识', 'entry', 'robot_', '用于区分不同机器人的唯一名称'),
+            ('模拟器索引', 'spinbox', (0, 99, 1), '对应雷电多开器中的模拟器ID，0表示第一个模拟器,如果不明白请设置为0'),
+            ('服务器', 'combo', ['国际服', '国服'], '选择游戏服务器版本,目前只支持国际服'),
+            ('最小资源', 'entry', '200000', '搜索村庄对方必须高过的资源总量,超过该值才会触发进攻'),
+            ('进攻资源边缘靠近比例下限', 'entry', '0.6', '资源建筑数量位置是否足够靠边与总资源建筑的占比，0~1之间,底本设置为0,高本设置为0.6左右'),
+            ('是否开启刷墙', 'combo', ['开启', '关闭'], '是否使用金币或圣水刷墙'),
+            ('刷墙起始金币', 'entry', '200000', '金币高于此数值才会开始刷墙'),
+            ('刷墙起始圣水', 'entry', '200000', '圣水高于此数值才会开始刷墙'),
+            ('是否开启夜世界打鱼', 'combo', ['开启', '关闭'], '是否在打满主世界后,继续夜世界中打满资源'),
         ]
+
         self.配置输入项 = {}
-        for 行, (标签, 类型, 默认值) in enumerate(配置项定义):
+        for 行, (标签, 类型, 默认值, 提示文本) in enumerate(配置项定义):
             ttk.Label(配置表单, text=f"{标签}：").grid(row=行, column=0, padx=5, pady=5, sticky=tk.E)
 
             if 类型 == 'entry':
@@ -268,6 +307,8 @@ class 增强型机器人控制界面:
                 控件 = ttk.Spinbox(配置表单, from_=默认值[0], to=默认值[1], increment=默认值[2])
 
             控件.grid(row=行, column=1, padx=5, pady=5, sticky=tk.EW)
+            # 添加工具提示
+            工具提示(控件, 提示文本)
 
             self.配置输入项[标签] = 控件
             ttk.Label(配置表单, text="*" if 标签 == "机器人标识" else "").grid(row=行, column=2, sticky=tk.W)
@@ -378,7 +419,8 @@ class 增强型机器人控制界面:
                 开启刷墙=True if 配置数据["是否开启刷墙"] == "开启" else False,
                 刷墙起始金币=int(配置数据["刷墙起始金币"]),
                 刷墙起始圣水=int(配置数据["刷墙起始圣水"]),
-                欲进攻资源建筑靠近地图边缘最小比例=float(配置数据["进攻资源边缘靠近比例下限"])
+                欲进攻资源建筑靠近地图边缘最小比例=float(配置数据["进攻资源边缘靠近比例下限"]),
+                是否刷夜世界=True if 配置数据["是否开启夜世界打鱼"] == "开启" else False,
             )
         except ValueError as e:
             messagebox.showerror("配置错误", f"数值格式错误: {str(e)}")
@@ -465,20 +507,39 @@ class 增强型机器人控制界面:
         except Exception as e:
             messagebox.showerror("删除失败", f"删除过程中发生异常：{e}")
 
+    # def 更新当前选择(self, event):
+    #     选中项 = self.机器人列表框.selection()
+    #     # 防止重复触发：记录上一次选中的项，只有变化时才更新
+    #     if hasattr(self, '上次选中项') and self.上次选中项 == 选中项:
+    #         return  # 和上次一样，不处理
+    #
+    #     self.上次选中项 = 选中项
+    #
+    #     if 选中项:
+    #         self.当前机器人ID = self.机器人列表框.item(选中项[0], 'text')
+    #         self._更新按钮状态()
+    #         self.更新日志显示()
+    #         选中项 = self.机器人列表框.selection()
+    #         if 选中项:
+    #             新机器人ID = self.机器人列表框.item(选中项[0], 'text')
+    #             if 新机器人ID != self.上一次机器人ID:
+    #                 self.当前机器人ID = 新机器人ID
+    #                 self.载入选中配置()
+    #                 self.更新状态显示()
+    #                 self.上一次机器人ID = 新机器人ID
     def 更新当前选择(self, event):
         选中项 = self.机器人列表框.selection()
-        if 选中项:
-            self.当前机器人ID = self.机器人列表框.item(选中项[0], 'text')
-            self._更新按钮状态()
-            选中项 = self.机器人列表框.selection()
-            if 选中项:
-                新机器人ID = self.机器人列表框.item(选中项[0], 'text')
-                if 新机器人ID != self.上一次机器人ID:
-                    self.当前机器人ID = 新机器人ID
-                    self.载入选中配置()
-                    self.更新状态显示()
-                    self.上一次机器人ID = 新机器人ID
+        if not 选中项:
+            return
 
+        新机器人ID = self.机器人列表框.item(选中项[0], 'text')
+
+        # 只有当机器人改变时才更新日志
+        if 新机器人ID != self.当前机器人ID:
+            self.当前机器人ID = 新机器人ID
+            self.载入选中配置()
+            self.更新状态显示()
+            self.更新日志显示()  # 只在切换时刷新日志
             # self.载入选中配置()
             #
             # self.更新状态显示()
@@ -506,6 +567,10 @@ class 增强型机器人控制界面:
 
             self.配置输入项["刷墙起始圣水"].delete(0, tk.END)
             self.配置输入项["刷墙起始圣水"].insert(0, str(配置.刷墙起始圣水))
+
+            self.配置输入项["是否开启夜世界打鱼"].set("开启" if 配置.是否刷夜世界 == True else "关闭")
+
+
             self._更新按钮状态()
 
     def 更新状态显示(self):
@@ -551,8 +616,8 @@ class 增强型机器人控制界面:
                     break
 
         # 清除无效选择
-        if self.当前机器人ID and self.当前机器人ID not in self.监控中心.机器人池:
-            self.当前机器人ID = None
+        # if self.当前机器人ID and self.当前机器人ID not in self.监控中心.机器人池:
+        #     self.当前机器人ID = None
 
         # 清除所有选择
         self.机器人列表框.selection_remove(self.机器人列表框.selection())
@@ -576,7 +641,8 @@ class 增强型机器人控制界面:
 
 
 if __name__ == "__main__":
-    监控中心 = 机器人监控中心()
+    日志队列 = queue.Queue()
+    监控中心 = 机器人监控中心(日志队列)
     root = tk.Tk()
     界面 = 增强型机器人控制界面(root, 监控中心)
     root.mainloop()
