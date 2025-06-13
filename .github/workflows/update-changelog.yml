@@ -3,8 +3,8 @@ name: 更新 CHANGELOG
 on:
   push:
     tags:
-      - "v*"  # 仅在推送 tag 时触发，如 v1.0.0
-  workflow_dispatch:  # 允许手动触发
+      - "v*"  # 仅在推送 tag 时触发
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -21,7 +21,18 @@ jobs:
         id: tags
         run: |
           CURRENT_TAG=${GITHUB_REF#refs/tags/}
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))
+          TAGS=($(git tag --sort=-creatordate))
+          PREVIOUS_TAG=""
+
+          for tag in "${TAGS[@]}"; do
+            if [[ "$tag" != "$CURRENT_TAG" ]]; then
+              PREVIOUS_TAG=$tag
+              break
+            fi
+          done
+
+          echo "当前 Tag: $CURRENT_TAG"
+          echo "上一个 Tag: $PREVIOUS_TAG"
           echo "current_tag=$CURRENT_TAG" >> $GITHUB_OUTPUT
           echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
 
@@ -30,7 +41,13 @@ jobs:
         run: |
           echo "## ✨ ${{ steps.tags.outputs.current_tag }} ($(date '+%Y-%m-%d'))" > NEW_CHANGELOG.md
           echo "" >> NEW_CHANGELOG.md
-          git log ${{ steps.tags.outputs.previous_tag }}..${{ steps.tags.outputs.current_tag }} --pretty=format:"* %s" >> NEW_CHANGELOG.md
+
+          if [ -z "${{ steps.tags.outputs.previous_tag }}" ]; then
+            git log --pretty=format:"* %s" >> NEW_CHANGELOG.md
+          else
+            git log ${{ steps.tags.outputs.previous_tag }}..${{ steps.tags.outputs.current_tag }} --pretty=format:"* %s" >> NEW_CHANGELOG.md
+          fi
+
           echo -e "\n---\n" >> NEW_CHANGELOG.md
           cat CHANGELOG.md >> NEW_CHANGELOG.md
           mv NEW_CHANGELOG.md CHANGELOG.md
