@@ -6,7 +6,8 @@ from 模块.检测.模板匹配器 import 模板匹配引擎
 
 class 更新夜世界资源状态任务(基础任务):
     """识别夜世界资源，并更新数据库"""
-    def __init__(self):
+    def __init__(self, 上下文: '任务上下文'):
+        super().__init__(上下文)
         self.ocr引擎 = 安全OCR引擎()
         self.检测器 = 线程安全YOLO检测器()
         self.模板识别 = 模板匹配引擎()

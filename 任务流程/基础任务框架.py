@@ -6,6 +6,7 @@ import threading
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Tuple
 
 from 工具包.工具函数 import 生成贝塞尔轨迹
 from 数据库.任务数据库 import 任务数据库
@@ -116,6 +117,8 @@ from abc import ABC, abstractmethod
 
 class 基础任务(ABC):
     """游戏任务基类"""
+    def __init__(self,上下文: '任务上下文'):
+        self.上下文=上下文
 
     @abstractmethod
     def 执行(self, 上下文: '任务上下文') -> bool:
@@ -133,3 +136,25 @@ class 基础任务(ABC):
             上下文.置脚本状态("重启游戏")
             上下文.脚本延时(2000)
             上下文.雷电模拟器.打开应用(上下文.数据库.获取机器人设置(上下文.机器人标志).部落冲突包名)
+
+    def 已出现图片(self, 模板路径: str, 区域: Tuple[int, int, int, int] = (0, 0, 800, 600)) -> Tuple[
+        bool, Tuple[int, int]]:
+        """
+        当前机器人操作的模拟器是否出现指定图片，并返回坐标。
+
+        参数:
+            模板路径: 模板图路径（可为多个路径用 | 分隔）
+            区域: 指定识别区域，格式为 (x1, y1, x2, y2)
+
+        返回:
+            是否匹配, (x, y) 坐标
+        """
+        x1, y1, x2, y2 = 区域
+        屏幕图像 = self.上下文.op.获取屏幕图像cv(x1, y1, x2, y2)
+        是否匹配, (x, y), _ = self.模板识别.执行匹配(屏幕图像, 模板路径, 相似度阈值=0.9)
+
+        # 注意坐标需要加上区域偏移量
+        if 是否匹配:
+            return True, (x + x1, y + y1)
+        else:
+            return False, (x + x1, y + y1)

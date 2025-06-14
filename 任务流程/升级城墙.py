@@ -19,7 +19,8 @@ class 资源不足错误(Exception):
 
 class 城墙升级任务(基础任务):
     """自动检测并升级城墙"""
-    def __init__(self):
+    def __init__(self, 上下文: '任务上下文'):
+        super().__init__(上下文)
         self.ocr引擎 = 安全OCR引擎()
         self.检测器 = 线程安全YOLO检测器()
         self.模板识别 = 模板匹配引擎()
