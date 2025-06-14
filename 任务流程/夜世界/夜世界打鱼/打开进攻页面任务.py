@@ -14,6 +14,10 @@ class 打开进攻页面(夜世界基础任务):
             if not self.是否出现开始进攻():
                 raise RuntimeError("打开进攻页面失败")
 
+            while self.是否出现进攻需要等待():
+                self.上下文.置脚本状态("出现进攻需要等待页面,等待倒计时结束中……")
+                self.上下文.脚本延时(500)
+
             self.上下文.点击(600, 380)  # 点击立即寻找
 
             return True
@@ -24,6 +28,16 @@ class 打开进攻页面(夜世界基础任务):
     def 是否出现开始进攻(self):
         """验证是否已开始战斗"""
         是否匹配, (x, y)= self.是否出现图片( "夜世界_开始进攻.bmp")
+        if 是否匹配:
+            return True
+        else:
+            return False
+
+
+    def 是否出现进攻需要等待(self):
+        """验证是否已开始战斗"""
+        是否匹配, (x, y)= self.是否出现图片( "夜世界_进攻需要等待.bmp")
+        print(是否匹配, (x, y))
         if 是否匹配:
             return True
         else:
