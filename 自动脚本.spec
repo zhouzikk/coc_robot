@@ -15,7 +15,14 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 版本号文件 = os.path.join(项目根, "工具包", "版本号.txt")
 # 生成版本号文件（打包前执行）
 print("正在生成版本号文件...")
-subprocess.run(["python", os.path.join(项目根, "工具包", "生成版本号文件.py")], check=True)
+
+env = os.environ.copy()
+env["PYTHONIOENCODING"] = "utf-8"
+subprocess.run(
+    ["python", os.path.join(项目根, "工具包", "生成版本号文件.py")],
+    check=True,
+    env=env
+)
 
 
 

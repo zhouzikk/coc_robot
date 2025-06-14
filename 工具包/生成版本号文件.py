@@ -1,5 +1,9 @@
+# -*- coding: utf-8 -*-
 import subprocess
 import os
+import sys
+import io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 def 获取简洁版本号():
     try:
