@@ -5,6 +5,10 @@ import subprocess
 
 from PyInstaller.utils.hooks import collect_submodules
 
+import sys
+import io
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 # 项目根目录（根据你的实际情况调整）
 项目根 = os.path.abspath(os.getcwd())
 # 版本号文件路径（相对于项目根目录）
