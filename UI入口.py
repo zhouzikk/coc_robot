@@ -296,7 +296,7 @@ class 增强型机器人控制界面:
                 控件 = ttk.Entry(配置表单)
                 控件.insert(0, 默认值)
             elif 类型 == 'combo':
-                控件 = ttk.Combobox(配置表单, values=默认值)
+                控件 = ttk.Combobox(配置表单, values=默认值,font=("微软雅黑", 10))
                 控件.current(0)
             elif 类型 == 'spinbox':
                 控件 = ttk.Spinbox(配置表单, from_=默认值[0], to=默认值[1], increment=默认值[2])
