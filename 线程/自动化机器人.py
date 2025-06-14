@@ -197,6 +197,7 @@ class 自动化机器人:
              print("-"*10+F"{self.机器人标志} 线程因为异常而消亡"+"-"*10+f"异常: {str(e)}")
         except SystemExit as e:
             print("-"*10+F"{self.机器人标志} 线程因为捕获到退出而消亡"+"-"*10)
+            print(F"具体信息:{str(e)}")
         finally:
             上下文.op.安全清理()
 
