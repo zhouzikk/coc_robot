@@ -1,3 +1,9 @@
+## ✨ v1.1.4 (2025-06-14)
+
+提交日志：
+377536e Merge remote-tracking branch 'origin/main'
+---
+
 ## ✨ v1.1.3 (2025-06-13)
 
 提交日志：
