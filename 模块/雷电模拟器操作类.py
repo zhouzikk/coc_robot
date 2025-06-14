@@ -67,6 +67,8 @@ class 雷电模拟器操作类:
         except Exception as e:
             raise RuntimeError(f"注册表访问失败: {str(e)}")
 
+
+
     @staticmethod
     def 将雷电模拟器命令行返回信息解析为字典(text):
         """
@@ -133,6 +135,27 @@ class 雷电模拟器操作类:
             )
             return 模拟器状态.stdout
 
+    def 修改分辨率(self, 宽度=800, 高度=600, dpi=160):
+        """
+        修改当前模拟器实例的分辨率设置。
+        注意：该修改在模拟器未重启前不会生效。
+
+        参数:
+        宽度 (int): 分辨率宽度。
+        高度 (int): 分辨率高度。
+        dpi (int): 模拟器DPI。
+        """
+        with self._命令行锁:
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+            分辨率参数 = f"{宽度},{高度},{dpi}"
+            subprocess.run(
+                [self.雷电模拟器安装目录 + "ldconsole.exe", "modify", "--index", str(self.雷电模拟器索引),
+                 "--resolution", 分辨率参数],
+                shell=False,
+                startupinfo=startupinfo
+            )
 
     def 取模拟器所有状态(self):
         """
@@ -233,6 +256,48 @@ class 雷电模拟器操作类:
                 shell=False,
                 startupinfo=startupinfo
             )
+
+    def 等待安卓系统完全启动(self):
+        """
+        阻塞等待模拟器中 Android 系统完全启动完成。
+
+        本方法使用雷电模拟器提供的 ldconsole 工具执行 ADB 命令，轮询读取 Android 属性 `sys.boot_completed`。
+        当该属性返回值为 '1' 时表示系统启动完成。为了确保系统完全加载桌面，额外等待 5 秒。
+
+        注意：
+            - 该方法会阻塞线程直到模拟器启动完成，建议配合线程或设置调用超时。
+            - 调用时需确保模拟器已启动。
+
+        异常：
+            - 若 ldconsole.exe 路径错误或未正确启动模拟器，可能引发 subprocess 错误。
+
+        示例：
+            模拟器 = 雷电模拟器操作类(0)
+            模拟器.启动模拟器()
+            模拟器.等待安卓系统完全启动()
+        """
+        adb命令 = [
+            self.雷电模拟器安装目录 + "ldconsole.exe",
+            "adb",
+            "--index", str(self.雷电模拟器索引),
+            "--command", "shell getprop sys.boot_completed"
+        ]
+
+        while True:
+            with self._命令行锁:
+                结果 = subprocess.run(adb命令, stdout=subprocess.PIPE, encoding='gbk')
+            if 结果.stdout.strip() == '1':
+                print("adb返回安装系统已经启动")
+                break
+            time.sleep(1)
+
+        # 等完全加载好桌面，比如再等5秒
+        time.sleep(10)
+
+    def 关闭雷电模拟器(self):
+        with self._命令行锁:
+            关闭命令 = [self.雷电模拟器安装目录 + "ldconsole.exe", "quit", "--index", str(self.雷电模拟器索引)]
+            subprocess.run(关闭命令, encoding='gbk')
 
     def 打开应用(self, 包名):
         with self._命令行锁:
