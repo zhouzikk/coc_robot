@@ -9,6 +9,8 @@ from 数据库.任务数据库 import 机器人设置, 任务数据库
 from 线程.自动化机器人 import 自动化机器人
 from sv_ttk import set_theme
 
+from 调度器 import 任务调度器界面
+
 
 class 增强型机器人控制界面:
     def __init__(self, master, 监控中心):
@@ -335,6 +337,9 @@ class 增强型机器人控制界面:
         # 初始状态
         self._更新按钮状态()
         右侧容器.add(配置框架, text="配置管理")
+
+        # 调度器=任务调度器界面(配置框架)
+        # 右侧容器.add(调度器, text="运行日志")
 
     def _更新按钮状态(self):
         """根据当前模式更新按钮状态"""
