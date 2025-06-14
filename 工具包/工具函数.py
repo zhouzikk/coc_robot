@@ -90,7 +90,7 @@ class 工具提示:
         self.提示框 = tk.Toplevel(self.控件)
         self.提示框.wm_overrideredirect(True)
         self.提示框.wm_geometry(f"+{x}+{y}")
-        标签 = tk.Label(self.提示框, text=self.文本, background="#ffffe0", relief="solid", borderwidth=1, font=("微软雅黑", 12))
+        标签 = tk.Label(self.提示框, text=self.文本, background="#ffffe0", relief="solid", borderwidth=1, font=("微软雅黑", 12),wraplength=300)
         标签.pack(ipadx=1)
 
     def 离开(self, 事件):
