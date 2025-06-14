@@ -4,6 +4,7 @@ from tkinter import ttk, scrolledtext, messagebox
 import time
 from 主入口 import 机器人监控中心
 from 工具包.工具函数 import 打印运行耗时, 工具提示
+from 工具包.版本管理 import 获取版本号
 from 数据库.任务数据库 import 机器人设置, 任务数据库
 from 线程.自动化机器人 import 自动化机器人
 from sv_ttk import set_theme
@@ -15,7 +16,7 @@ class 增强型机器人控制界面:
         self.master = master
         self.监控中心 = 监控中心
         self.日志队列 = 监控中心.日志队列
-        self.master.title("机器人监控控制中心 v2.0")
+        self.master.title("机器人监控控制中心 "+获取版本号())
         self._设置窗口尺寸(1200, 700)
 
         self.当前机器人ID = None
@@ -650,6 +651,7 @@ class 增强型机器人控制界面:
 
 
 if __name__ == "__main__":
+    print("当前版本号：", 获取版本号())
     日志队列 = queue.Queue()
     监控中心 = 机器人监控中心(日志队列)
     root = tk.Tk()

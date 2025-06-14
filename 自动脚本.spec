@@ -1,7 +1,19 @@
 # 自动脚本.spec
 # -*- mode: python ; coding: utf-8 -*-
 import os
+import subprocess
+
 from PyInstaller.utils.hooks import collect_submodules
+
+# 项目根目录（根据你的实际情况调整）
+项目根 = os.path.abspath(os.getcwd())
+# 版本号文件路径（相对于项目根目录）
+版本号文件 = os.path.join(项目根, "工具包", "版本号.txt")
+# 生成版本号文件（打包前执行）
+print("正在生成版本号文件...")
+subprocess.run(["python", os.path.join(项目根, "工具包", "生成版本号文件.py")], check=True)
+
+
 
 block_cipher = None
 
@@ -17,7 +29,8 @@ a = Analysis(
         ('核心/op-0.4.5_with_model/op_x64.dll', 'op-0.4.5_with_model/'),
         ('模块/检测/OCR识别器/rapidocr_onnxruntime/config.yaml','模块/检测/OCR识别器/rapidocr_onnxruntime/'),
         ('模块/检测/OCR识别器/rapidocr_onnxruntime/models/*.*','模块/检测/OCR识别器/rapidocr_onnxruntime/models/'),
-        ('模块/检测/YOLO检测器/模型/*.*','模块/检测/YOLO检测器/模型/')
+        ('模块/检测/YOLO检测器/模型/*.*','模块/检测/YOLO检测器/模型/'),
+        ('版本号.txt', ".")
     ],
     hiddenimports=collect_submodules('模块') + collect_submodules('核心'),
     hookspath=[],

@@ -4,6 +4,8 @@ import time
 import cv2
 import tkinter as tk
 
+import os
+import subprocess
 
 def 打印运行耗时(函数):
     @functools.wraps(函数)
