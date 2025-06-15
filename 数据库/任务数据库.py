@@ -29,7 +29,8 @@ class 机器人设置:
     def __post_init__(self):
         self.部落冲突包名 = ("com.supercell.clashofclans"
                         if self.服务器 == "国际服" else
-                        "com.tencent.tmgp.supercell.clashofclans")
+                             "com.atrasis.original.emulator")
+                        # "com.tencent.tmgp.supercell.clashofclans")
 
 @dataclass
 class 运行时状态:
