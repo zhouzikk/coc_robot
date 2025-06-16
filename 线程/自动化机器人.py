@@ -40,7 +40,7 @@ class 自动化机器人:
         self.继续事件 = threading.Event()
         self.停止事件 = threading.Event()
         self.停止事件.set()#目前未启动线程,处于停止状态
-        self.雷电模拟器=雷电模拟器操作类(self.数据库.获取机器人设置(机器人标志).雷电模拟器索引)
+
         self.op:op类
 
 
@@ -117,6 +117,7 @@ class 自动化机器人:
         if self.op is None:
             print("op创建失败")
 
+        self.雷电模拟器=雷电模拟器操作类(self.数据库.获取机器人设置(self.机器人标志).雷电模拟器索引)
         上下文=任务上下文(
             机器人标志=self.机器人标志,
             消息队列=self.消息队列,
