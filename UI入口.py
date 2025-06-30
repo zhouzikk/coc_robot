@@ -127,7 +127,8 @@ class 增强型机器人控制界面:
             全部日志.sort(key=lambda 日志: 日志.记录时间)
 
             模拟日志 = [
-                f"[{time.strftime('%H:%M:%S', time.localtime(项.记录时间))}] {项.机器人标志} {项.日志内容}"
+                # f"[{time.strftime('%H:%M:%S', time.localtime(项.记录时间))}] {项.机器人标志} {项.日志内容}"
+                f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(项.记录时间))}  {项.日志内容}"
                 for 项 in 全部日志
             ]
 

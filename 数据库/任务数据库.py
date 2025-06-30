@@ -17,7 +17,7 @@ class 任务日志:
 class 机器人设置:
     雷电模拟器索引:int=1
     服务器:str="国际服"
-    部落冲突包名: str = None
+    部落冲突包名: str | None = None
     欲进攻的最小资源:int=700000
     欲进攻资源建筑靠近地图边缘最小比例:float=0.5
     开启刷墙:bool=False
