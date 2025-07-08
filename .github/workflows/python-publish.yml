@@ -1,10 +1,10 @@
 name: 自动构建发布流程
 
 on:
-  push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+*'  # 标准语义化版本
-      - 'v*-test'  # 明确包含test的标签
+#  push:
+#    tags:
+#      - 'v[0-9]+.[0-9]+.[0-9]+*'  # 标准语义化版本
+#      - 'v*-test'  # 明确包含test的标签
   workflow_dispatch:  # 允许手动触发
 
 jobs:
