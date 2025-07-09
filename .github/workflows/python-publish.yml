@@ -89,8 +89,8 @@ jobs:
         tag_name: ${{ github.ref_name }}
         name: "版本 ${{ github.ref_name }}"
         body_path: ./body.md
-        files: |
-          ${{ env.ZIP_PATH }}
+#        files: |
+#          ${{ env.ZIP_PATH }}
         draft: false
         prerelease: ${{ contains(github.ref, 'test') || contains(github.ref, 'beta') }}
 
