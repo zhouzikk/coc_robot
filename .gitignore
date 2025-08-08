@@ -1199,3 +1199,6 @@ coverage.xml
 
 # VSCode Python 调试配置缓存
 __pypackages__/
+
+#数据库文件
+*.db
